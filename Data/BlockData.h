@@ -22,6 +22,7 @@ struct Block {
     BlockState state;
 
     Block(BlockType type_value, BlockState state_value) : type(type_value), state(state_value) {}
+    Block(BlockType type_value) : type(type_value), state(Solid) {}
 };
 
 std::map<BlockType, color> block_colors = {

@@ -26,7 +26,7 @@ class World
             surface_base = height * 0.2;
             terrain_amplitude = height * 0.1;
 
-            blocks.assign(width, std::vector<Block>(height, Block(Air, Solid)));
+            blocks.assign(width, std::vector<Block>(height, Block(Air)));
             layer_config = {8, 40, 50, 20};
         }
         
@@ -77,16 +77,16 @@ class World
                 for (int y = 0; y < height; y++)
                 {
                     if (y < surface_height) {
-                        blocks[x][y] = Block(Air, Solid);
+                        blocks[x][y] = Block(Air);
                     } else {
                         int depth = y - surface_height;
                         switch (get_layer(y, surface_height, offsets))
                         {
-                            case SURFACE: blocks[x][y] = (depth < 3) ? Block(Grass, Solid) : Block(Dirt, Solid); break;
-                            case UNDERGROUND: blocks[x][y] = (depth < 10) ? Block(Dirt, Solid) : Block(Stone, Solid); break;
-                            case CAVERN: blocks[x][y] = Block(Deepstone, Solid); break;
-                            case UNDERWORLD: blocks[x][y] = Block(Hellstone, Solid); break;
-                            default: blocks[x][y] = Block(Air, Solid); break;
+                            case SURFACE: blocks[x][y] = (depth < 3) ? Block(Grass) : Block(Dirt); break;
+                            case UNDERGROUND: blocks[x][y] = (depth < 10) ? Block(Dirt) : Block(Stone); break;
+                            case CAVERN: blocks[x][y] = Block(Deepstone); break;
+                            case UNDERWORLD: blocks[x][y] = Block(Hellstone); break;
+                            default: blocks[x][y] = Block(Air); break;
                         }
                     }
                 }
