@@ -9,7 +9,7 @@ int main()
     world.generate();
 
     CellularAutomata ca(world);
-    ca.run(0, world.height, 7, 35); 
+    ca.run(0, world.height, 7, 38); 
 
     world.draw();
 

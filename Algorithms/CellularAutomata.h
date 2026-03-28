@@ -8,7 +8,7 @@ class CellularAutomata {
         CellularAutomata(World &target_world) : world(target_world) {}
 
         void run(int range_top_y, int range_bottom_y, int evolution_iterations, int initial_fill_probability) {
-            srand(world.seed); 
+            srand(world.seed);
 
             seed_initial_noise_pockets(range_top_y, range_bottom_y, initial_fill_probability);
 
@@ -28,7 +28,7 @@ class CellularAutomata {
             for (int x_coordinate = 0; x_coordinate < world.width; x_coordinate++) {
                 int surface_height = world.get_surface_height(x_coordinate);
                 for (int y_coordinate = range_top_y; y_coordinate < range_bottom_y; y_coordinate++) {
-                    if (y_coordinate > surface_height + 15 && rand() % 100 < fill_probability)
+                    if (y_coordinate > surface_height + 15 && (rand() % 100) < fill_probability)
                         world.blocks[x_coordinate][y_coordinate] = Block(Air);
                 }
             }
@@ -38,15 +38,14 @@ class CellularAutomata {
             std::vector<std::vector<Block>> next_generation_grid = world.blocks;
 
             for (int x_coordinate = 1; x_coordinate < world.width - 1; x_coordinate++) {
-                int surface_height = world.get_surface_height(x_coordinate);
-                std::vector<int> layer_transition_offsets = world.get_layer_offsets(x_coordinate);
+                int surface = world.get_surface_height(x_coordinate);
 
                 for (int y_coordinate = range_top_y + 1; y_coordinate < range_bottom_y - 1; y_coordinate++) {
-                    if (y_coordinate <= surface_height + surface_safety_margin || world.blocks[x_coordinate][y_coordinate].type == Grass) continue;
+                    if (y_coordinate <= surface + surface_safety_margin || world.blocks[x_coordinate][y_coordinate].type == Grass) continue;
 
                     int neighboring_wall_count = count_neighboring_walls(x_coordinate, y_coordinate);
                     if (neighboring_wall_count >= wall_threshold) {
-                        WorldLayer current_biome_layer = world.get_layer(y_coordinate, surface_height, layer_transition_offsets);
+                        WorldLayer current_biome_layer = world.get_layer(x_coordinate, y_coordinate, surface);
                         next_generation_grid[x_coordinate][y_coordinate] = Block(select_block_by_layer(current_biome_layer, false));
                     } else {
                         next_generation_grid[x_coordinate][y_coordinate] = Block(Air);
@@ -60,14 +59,13 @@ class CellularAutomata {
             std::vector<std::vector<Block>> next_generation_grid = world.blocks;
 
             for (int x_coordinate = 1; x_coordinate < world.width - 1; x_coordinate++) {
-                int surface_height = world.get_surface_height(x_coordinate);
-                std::vector<int> layer_transition_offsets = world.get_layer_offsets(x_coordinate);
+                int surface = world.get_surface_height(x_coordinate);
 
                 for (int y_coordinate = range_top_y + 1; y_coordinate < range_bottom_y - 1; y_coordinate++) {
-                    if (y_coordinate <= surface_height + surface_safety_margin || world.blocks[x_coordinate][y_coordinate].type != Air) continue;
+                    if (y_coordinate <= surface + surface_safety_margin || world.blocks[x_coordinate][y_coordinate].type != Air) continue;
 
                     if (count_neighboring_walls(x_coordinate, y_coordinate) >= wall_threshold) {
-                        WorldLayer current_biome_layer = world.get_layer(y_coordinate, surface_height, layer_transition_offsets);
+                        WorldLayer current_biome_layer = world.get_layer(x_coordinate, y_coordinate, surface);
                         next_generation_grid[x_coordinate][y_coordinate] = Block(select_block_by_layer(current_biome_layer, true));
                     }
                 }
@@ -77,7 +75,7 @@ class CellularAutomata {
 
         BlockType select_block_by_layer(WorldLayer biome_layer, bool prefer_deep_variant) {
             if (biome_layer == UNDERWORLD) return Hellstone;
-            if (biome_layer == CAVERN) return prefer_deep_variant ? Deepstone : Stone;
+            if (biome_layer == CAVERN) return prefer_deep_variant ? Cavernstone : Stone;
             return Dirt;
         }
 
