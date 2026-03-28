@@ -1,11 +1,12 @@
 #pragma once
 #include "splashkit.h"
 #include "splashkit-arrays.h"
-
-#include "BlockData.h"
-#include "NoiseData.h"
-
+#include "WorldGenerationHeaders.h"
 #include <vector>
+
+enum WorldLayer { SPACE, SURFACE, UNDERGROUND, CAVERN, UNDERWORLD };
+
+struct LayerConfigData { int surface_depth, underground_depth, cavern_depth, underworld_depth; };
 
 class World
 {
@@ -13,46 +14,76 @@ class World
         int width, height;
         unsigned int seed;
         int zoom;
-
         std::vector<std::vector<Block>> blocks;
-    
-    private:
-        Noise noise;
+        LayerConfigData layer_config;
 
-    public:
-        World(int width_value, int height_value, unsigned int seed_value, int zoom_value) : width(width_value), height(height_value), seed(seed_value), zoom(zoom_value), noise(seed_value) 
-        { 
-            blocks.resize(width);
-            for (int x = 0; x < width; x++)
+        World(int w, int h, unsigned int s, int z) : width(w), height(h), seed(s), zoom(z), noise(s)
+        {
+            surface_base = height * 0.2;
+            terrain_amplitude = height * 0.1;
+
+            blocks.assign(width, std::vector<Block>(height, Block(Air, Solid)));
+            layer_config = {5, 40, 50, 20};
+        }
+
+        WorldLayer get_layer(int y, int surface_height)
+        {
+            int bottom = surface_height;
+            struct Layer { WorldLayer type; int depth; };
+            Layer layers[] = {
+                {SURFACE, layer_config.surface_depth},
+                {UNDERGROUND, layer_config.underground_depth},
+                {CAVERN, layer_config.cavern_depth},
+                {UNDERWORLD, layer_config.underworld_depth}
+            };
+
+            if (y < surface_height) return SPACE;
+
+            for (int i = 0; i < 4; i++)
             {
-                blocks[x].resize(height, Block(Air, Solid));
+                bottom += layers[i].depth;
+                if (y < bottom) return layers[i].type;
             }
+
+            return UNDERWORLD;
         }
 
         void generate()
         {
-            for(int x = 0; x < width; x++)
+            for (int x = 0; x < width; x++)
             {
-                for(int y = 0; y < height; y++)
+                double noise_value = (noise.value({(double)x, 0.0}) + 1.0) / 2.0;
+                int surface_height = surface_base + int(noise_value * terrain_amplitude);
+
+                for (int y = 0; y < height; y++)
                 {
-                    double val = noise.value({(double) x, (double) y});
-                    if(val < 0.3) blocks[x][y] = Block(Air, Solid);
-                    else if(val < 0.5) blocks[x][y] = Block(Dirt, Solid);
-                    else if(val < 0.8) blocks[x][y] = Block(Grass, Solid);
-                    else blocks[x][y] = Block(Stone, Solid);
+                    if (y < surface_height)
+                        blocks[x][y] = Block(Air, Solid);
+                    else
+                    {
+                        int depth = y - surface_height;
+                        switch (get_layer(y, surface_height))
+                        {
+                            case SURFACE: blocks[x][y] = (depth == 0) ? Block(Grass, Solid) : Block(Dirt, Solid); break;
+                            case UNDERGROUND: blocks[x][y] = (depth < 5) ? Block(Dirt, Solid) : Block(Stone, Solid); break;
+                            case CAVERN: case UNDERWORLD: blocks[x][y] = Block(Stone, Solid); break;
+                            default: blocks[x][y] = Block(Air, Solid); break;
+                        }
+                    }
                 }
             }
         }
 
         void draw()
         {
-            for(int x = 0; x < width; x++)
-            {
-                for(int y = 0; y < height; y++)
-                {
-                    Block &b = blocks[x][y];
-                    fill_rectangle(block_colors[b.type], x * zoom * BLOCK_SIZE, y * zoom * BLOCK_SIZE, BLOCK_SIZE * zoom, BLOCK_SIZE * zoom);
+            for (int x = 0; x < width; x++){
+                for (int y = 0; y < height; y++){
+                    fill_rectangle(block_colors[blocks[x][y].type], x * zoom * BLOCK_SIZE, y * zoom * BLOCK_SIZE, BLOCK_SIZE * zoom, BLOCK_SIZE * zoom);
                 }
             }
         }
+
+    private:
+        int surface_base, terrain_amplitude;
+        Noise noise;
 };
