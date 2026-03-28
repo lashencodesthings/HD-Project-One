@@ -39,10 +39,13 @@ std::map<BlockType, color> block_colors = {
     {Grass, COLOR_GREEN}, 
     {Dirt, rgb_color(123, 88, 62)}, 
     {Stone, COLOR_GRAY}, 
-    {Hellstone, COLOR_ORANGE}, 
+    {Hellstone, rgb_color(70, 65, 75)}, 
     {Cavernstone, rgb_color(125, 126, 121)}, 
 };
 
 std::map<WallType, color> wall_colors = {
-    {UndergroundWall, rgb_color(71, 49, 39)}
+    {UndergroundWall, rgb_color(71, 49, 39)},
+    {CavernWall, rgb_color(69, 63, 55)},
+    {HellWall, rgb_color(48, 0, 0)},
+
 };

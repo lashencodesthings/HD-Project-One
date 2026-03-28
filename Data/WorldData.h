@@ -67,20 +67,46 @@ class World
 
             for (int x = 0; x < width; x++)
             {
-                int surface_height = get_surface_height(x);
+                int surface_height = surface_map[x]; 
+                
                 for (int y = 0; y < height; y++)
                 {
                     if (y < surface_height) {
                         blocks[x][y] = Block(Air);
                     } else {
                         int depth = y - surface_height;
-                        switch (get_layer(x, y, surface_height))
-                        {
-                            case SURFACE: blocks[x][y] = (depth < 3) ? Block(Grass) : Block(Dirt, Solid, UndergroundWall); break;
-                            case UNDERGROUND: blocks[x][y] = (depth < 10) ? Block(Dirt, Solid, UndergroundWall) : Block(Stone); break;
-                            case CAVERN: blocks[x][y] = Block(Cavernstone, Solid, CavernWall); break;
-                            case UNDERWORLD: blocks[x][y] = Block(Hellstone, Solid, HellWall); break;
-                            default: blocks[x][y] = Block(Air); break;
+
+                        if (depth == 0) {
+                            blocks[x][y] = Block(Grass, Solid, AirWall);
+                        } 
+                        else if (depth < 5){
+                            blocks[x][y] = Block(Dirt, Solid, UndergroundWall);
+                        }
+                        else {
+                            WorldLayer current_layer = get_layer(x, y, surface_height);
+
+                            switch(current_layer) 
+                            {
+                                case SURFACE:
+                                case UNDERGROUND:
+                                {
+                                    double stone_noise = noise_underground.value({x * 0.1, y * 0.1});
+                                    if (stone_noise > 0.2)
+                                        blocks[x][y] = Block(Stone, Solid, UndergroundWall);
+                                    else
+                                        blocks[x][y] = Block(Dirt, Solid, UndergroundWall);
+                                    break;
+                                }
+                                case CAVERN: 
+                                    blocks[x][y] = Block(Cavernstone, Solid, CavernWall); 
+                                    break;
+                                case UNDERWORLD: 
+                                    blocks[x][y] = Block(Hellstone, Solid, HellWall); 
+                                    break;
+                                default: 
+                                    blocks[x][y] = Block(Air); 
+                                    break;
+                            }
                         }
                     }
                 }
@@ -91,7 +117,37 @@ class World
         {
             for (int x = 0; x < width; x++){
                 for (int y = 0; y < height; y++){
-                    fill_rectangle(block_colors[blocks[x][y].type], x * BLOCK_SIZE * zoom, y * BLOCK_SIZE * zoom, BLOCK_SIZE * zoom, BLOCK_SIZE * zoom);
+                    
+                    if (blocks[x][y].type != Air) {
+                        fill_rectangle(
+                            block_colors[blocks[x][y].type],
+                            x * BLOCK_SIZE * zoom,
+                            y * BLOCK_SIZE * zoom,
+                            BLOCK_SIZE * zoom,
+                            BLOCK_SIZE * zoom
+                        );
+                    }
+                    else
+                    {
+                        if (blocks[x][y].type == Air && blocks[x][y].back_wall != AirWall) {
+                            fill_rectangle(
+                                wall_colors[blocks[x][y].back_wall],
+                                x * BLOCK_SIZE * zoom,
+                                y * BLOCK_SIZE * zoom,
+                                BLOCK_SIZE * zoom,
+                                BLOCK_SIZE * zoom
+                            );
+                        }
+                        else{
+                            fill_rectangle(
+                                block_colors[Air],
+                                x * BLOCK_SIZE * zoom,
+                                y * BLOCK_SIZE * zoom,
+                                BLOCK_SIZE * zoom,
+                                BLOCK_SIZE * zoom
+                            );
+                        }
+                    }
                 }
             }
         }
