@@ -1,17 +1,20 @@
-#include "./PerlinNoise.hpp"
-#include "WorldGenerationData.h"
+#pragma once
+#include "PerlinNoise.hpp"
 #include "splashkit.h"
 
-const struct NOISE_DATA
+const int octaves = 4;
+const float zoom = 0.05;
+
+class Noise
 {
-    const siv::PerlinNoise perlin;
-    const int octaves;
-    const float zoom;
+    private:
+        siv::PerlinNoise perlin;
 
-    NOISE_DATA(WORLD_GENERATION_DATA world, int octave_value, float zoom_value) : perlin{ world.seed }, octaves(octave_value), zoom(zoom_value) {}
+    public:        
+        Noise(const unsigned int &seed) : perlin { seed } {}
 
-    const double value(const point_2d &point)
-    {
-        return perlin.octave2D_01((point.x * zoom), (point.y * zoom), octaves);
-    }
+        const double value(const point_2d &point)
+        {
+            return perlin.octave2D_01((point.x * zoom), (point.y * zoom), octaves);
+        }
 };
