@@ -18,6 +18,8 @@ class World
         int zoom;
         std::vector<std::vector<Block>> blocks;
         LayerConfigData layer_config;
+        
+        int surface_base, terrain_amplitude;
 
         World(int w, int h, unsigned int s, int z) : width(w), height(h), seed(s), zoom(z), noise(s)
         {
@@ -25,12 +27,27 @@ class World
             terrain_amplitude = height * 0.1;
 
             blocks.assign(width, std::vector<Block>(height, Block(Air, Solid)));
-            layer_config = {5, 40, 50, 20};
+            layer_config = {8, 40, 50, 20};
+        }
+        
+        int get_surface_height(int x) {
+            double big_hills_noise = (noise.value({x * 0.5, 0.0}) + 1.0) * terrain_amplitude;
+            double small_bumps_noise = (noise.value({x * 0.1, 0.0}) + 1.0) * (terrain_amplitude / 2);
+            return int(surface_base + big_hills_noise + small_bumps_noise);
         }
 
-        WorldLayer get_layer(int y, int surface_height)
+        std::vector<int> get_layer_offsets(int x) {
+            return {
+                (int)(noise.value({x * 0.03, 100.0}) * 10),
+                (int)(noise.value({x * 0.02, 200.0}) * 20),
+                (int)(noise.value({x * 0.01, 300.0}) * 30),
+                (int)(noise.value({x * 0.005, 400.0}) * 40)
+            };
+        }
+
+        WorldLayer get_layer(int y, int surface_height, const std::vector<int>& offsets)
         {
-            int bottom = surface_height;
+            int current_boundary = surface_height;
             struct Layer { WorldLayer type; int depth; };
             Layer layers[] = {
                 {SURFACE, layer_config.surface_depth},
@@ -43,8 +60,8 @@ class World
 
             for (int i = 0; i < 4; i++)
             {
-                bottom += layers[i].depth;
-                if (y < bottom) return layers[i].type;
+                current_boundary += layers[i].depth + offsets[i]; 
+                if (y < current_boundary) return layers[i].type;
             }
 
             return UNDERWORLD;
@@ -54,23 +71,21 @@ class World
         {
             for (int x = 0; x < width; x++)
             {
-                double big_hills_noise = (noise.value({x * 0.5, 0.0}) + 1.0) * terrain_amplitude;
-                double small_bumps_noise = (noise.value({x * 0.1, 0.0}) + 1.0) * (terrain_amplitude / 2);
-                
-                int surface_height = int(surface_base + big_hills_noise + small_bumps_noise);
+                int surface_height = get_surface_height(x);
+                std::vector<int> offsets = get_layer_offsets(x);
 
                 for (int y = 0; y < height; y++)
                 {
-                    if (y < surface_height)
+                    if (y < surface_height) {
                         blocks[x][y] = Block(Air, Solid);
-                    else
-                    {
+                    } else {
                         int depth = y - surface_height;
-                        switch (get_layer(y, surface_height))
+                        switch (get_layer(y, surface_height, offsets))
                         {
-                            case SURFACE: blocks[x][y] = (depth == 0) ? Block(Grass, Solid) : Block(Dirt, Solid); break;
-                            case UNDERGROUND: blocks[x][y] = (depth < 5) ? Block(Dirt, Solid) : Block(Stone, Solid); break;
-                            case CAVERN: case UNDERWORLD: blocks[x][y] = Block(Stone, Solid); break;
+                            case SURFACE: blocks[x][y] = (depth < 3) ? Block(Grass, Solid) : Block(Dirt, Solid); break;
+                            case UNDERGROUND: blocks[x][y] = (depth < 10) ? Block(Dirt, Solid) : Block(Stone, Solid); break;
+                            case CAVERN: blocks[x][y] = Block(Deepstone, Solid); break;
+                            case UNDERWORLD: blocks[x][y] = Block(Hellstone, Solid); break;
                             default: blocks[x][y] = Block(Air, Solid); break;
                         }
                     }
@@ -88,6 +103,5 @@ class World
         }
 
     private:
-        int surface_base, terrain_amplitude;
         Noise noise;
 };

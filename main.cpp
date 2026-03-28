@@ -4,9 +4,13 @@
 int main()
 {
     open_window("Game", 1920, 1080);
-    World world(960, 540, 1234456u, 1);
+    World world(960, 540, 52u, 1);
 
     world.generate();
+
+    CellularAutomata ca(world);
+    ca.run(0, world.height, 7, 35); 
+
     world.draw();
 
     refresh_screen(60);

@@ -8,7 +8,9 @@ enum BlockType {
     Air,
     Grass,
     Dirt,
-    Stone
+    Stone,
+    Hellstone,
+    Deepstone
 };
 
 enum BlockState {
@@ -23,5 +25,5 @@ struct Block {
 };
 
 std::map<BlockType, color> block_colors = {
-    {Air, COLOR_WHITE}, {Grass, COLOR_GREEN}, {Dirt, COLOR_BROWN}, {Stone, COLOR_GRAY}
+    {Air, COLOR_LIGHT_BLUE}, {Grass, COLOR_GREEN}, {Dirt, COLOR_BROWN}, {Stone, COLOR_GRAY}, {Hellstone, COLOR_ORANGE}, {Deepstone, COLOR_DARK_GRAY}
 };
