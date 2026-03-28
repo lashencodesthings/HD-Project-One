@@ -2,7 +2,7 @@
 #include "splashkit.h"
 #include <map>
 
-const int BLOCK_SIZE = 16;
+const int BLOCK_SIZE = 2;
 
 enum BlockType {
     Air,

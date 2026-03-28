@@ -6,7 +6,9 @@
 
 enum WorldLayer { SPACE, SURFACE, UNDERGROUND, CAVERN, UNDERWORLD };
 
-struct LayerConfigData { int surface_depth, underground_depth, cavern_depth, underworld_depth; };
+struct LayerConfigData { 
+    int surface_depth, underground_depth, cavern_depth, underworld_depth;
+};
 
 class World
 {
@@ -52,8 +54,10 @@ class World
         {
             for (int x = 0; x < width; x++)
             {
-                double noise_value = (noise.value({(double)x, 0.0}) + 1.0) / 2.0;
-                int surface_height = surface_base + int(noise_value * terrain_amplitude);
+                double big_hills_noise = (noise.value({x * 0.5, 0.0}) + 1.0) * terrain_amplitude;
+                double small_bumps_noise = (noise.value({x * 0.1, 0.0}) + 1.0) * (terrain_amplitude / 2);
+                
+                int surface_height = int(surface_base + big_hills_noise + small_bumps_noise);
 
                 for (int y = 0; y < height; y++)
                 {
@@ -78,7 +82,7 @@ class World
         {
             for (int x = 0; x < width; x++){
                 for (int y = 0; y < height; y++){
-                    fill_rectangle(block_colors[blocks[x][y].type], x * zoom * BLOCK_SIZE, y * zoom * BLOCK_SIZE, BLOCK_SIZE * zoom, BLOCK_SIZE * zoom);
+                    fill_rectangle(block_colors[blocks[x][y].type], x * BLOCK_SIZE * zoom, y * BLOCK_SIZE * zoom, BLOCK_SIZE * zoom, BLOCK_SIZE * zoom);
                 }
             }
         }
