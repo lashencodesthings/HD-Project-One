@@ -7,6 +7,7 @@ CellularAutomata::CellularAutomata(World& world_data) : world(world_data), rng(w
 void CellularAutomata::run() {
     seed_noise();
     apply();
+    smooth();
 }
 
 bool CellularAutomata::add_air_hole() { 
@@ -15,7 +16,7 @@ bool CellularAutomata::add_air_hole() {
 
 void CellularAutomata::seed_noise() {
     for (int x = 0; x < world.width; ++x) {
-        int surface_height = world.surface_map[x];
+        int surface_height = world.surface_map[x] + 2;
         for (int y = surface_height; y < world.height; ++y) {
             if (add_air_hole()) {
                 Block &old = world.blocks[x][y];
@@ -55,12 +56,38 @@ void CellularAutomata::apply() {
     }
 
     for (int x = 0; x < width; ++x) {
-        for (int y = world.surface_map[x]; y < height; ++y) {
+        for (int y = world.surface_map[x] + 2; y < height; ++y) {
             int block_index = x + y * width;
             if (current[block_index]) {
                 world.blocks[x][y] = world.get_block_at(x, y);
             } else {
                 world.blocks[x][y] = Block(BlockType::Air, Solid, world.blocks[x][y].wall);
+            }
+        }
+    }
+}
+
+void CellularAutomata::smooth() {
+    const int width = world.width;
+    const int height = world.height;
+
+    for (int x = 1; x < width - 1; ++x) {
+        for (int y = world.surface_map[x] + 3; y < height - 1; ++y) {
+            
+            int neighbours = 0;
+            if (world.blocks[x - 1][y].type != BlockType::Air) neighbours++;
+            if (world.blocks[x + 1][y].type != BlockType::Air) neighbours++;
+            if (world.blocks[x][y - 1].type != BlockType::Air) neighbours++;
+            if (world.blocks[x][y + 1].type != BlockType::Air) neighbours++;
+
+            bool is_solid = (world.blocks[x][y].type != BlockType::Air);
+
+            if (is_solid && neighbours <= 1) {
+                world.blocks[x][y] = Block(BlockType::Air, Solid, world.blocks[x][y].wall);
+            }
+
+            else if (!is_solid && neighbours >= 3) {
+                world.blocks[x][y] = Block(world.get_block_at(x, y));
             }
         }
     }

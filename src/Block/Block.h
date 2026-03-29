@@ -3,8 +3,8 @@
 #include <map>
 
 // Enumerations
-enum WallType { AirWall, UndergroundWall, CavernWall, HellWall };
-enum BlockType { Air, Grass, Dirt, Stone, Sand, Snow, Ice, JungleDirt, JungleGrass, Sandstone, Hellstone, Cavernstone };
+enum WallType { AirWall, SandWall, SnowWall, JungleWall, UndergroundWall, CavernWall, HellWall };
+enum BlockType { Air, Grass, Dirt, Stone, Sand, Snow, Ice, JungleDirt, JungleGrass, JungleStone, Sandstone, Hellstone, Cavernstone };
 enum BlockState { Solid };
 
 // Block struct

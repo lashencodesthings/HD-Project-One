@@ -14,6 +14,7 @@ class CellularAutomata {
         void seed_noise();
         void apply();
         bool add_air_hole();
+        void smooth();
 
         World& world;
         std::mt19937 rng;

@@ -13,8 +13,8 @@
   "layers": [
     { "thickness": 1, "variation": 0, "noise_scale": 0.05 },
     { "thickness": 20, "variation": 1, "noise_scale": 0.05 },
-    { "thickness": 40, "variation": 2, "noise_scale": 0.05 },
-    { "thickness": 80, "variation": 3, "noise_scale": 0.05 },
+    { "thickness": 60, "variation": 2, "noise_scale": 0.05 },
+    { "thickness": 100, "variation": 3, "noise_scale": 0.05 },
     { "thickness": 10, "variation": 3, "noise_scale": 0.05 }
   ]
 }
