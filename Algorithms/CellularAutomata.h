@@ -17,8 +17,10 @@ private:
     std::mt19937 rng;
 
     const int WALL_THRESHOLD = 4;
-    const int NOISE_DENSITY = 40;
-    const int ITERATIONS = 10;
+    const int NOISE_DENSITY = 35;
+    const int ITERATIONS = 12;
+    
+    const int OFFSET = 5;
 
     int random_percent() {
         std::uniform_int_distribution<int> dist(0, 99);
@@ -30,7 +32,7 @@ private:
         for (int x = 0; x < world.width; x++) {
             for (int y = 0; y < world.height; y++) {
                 int random = random_percent();
-                if (y < world.get_surface_height(x) + 8) continue;
+                if (y < world.get_surface_height(x) + OFFSET) continue;
 
                 if(random < NOISE_DENSITY) { 
                     noise_grid[x][y] = Block(BlockType::Air, Solid, noise_grid[x][y].wall); 
@@ -46,39 +48,47 @@ private:
 
     void apply()
     {
-        std::vector<int> surface_cache(world.width);
-        std::vector<std::vector<Block>> buffer = world.blocks;
+        int width = world.width;
+        int height = world.height;
 
-        for(int x = 0; x < world.width; x++) surface_cache[x] = world.get_surface_height(x) + 5;
+        std::vector<bool> current_bits(width * height);
+        std::vector<bool> iteration_bits(width * height);
+        std::vector<int> surface_cache(width);
 
-        for(int iteration = 0; iteration < ITERATIONS; iteration++)
-        {
-            std::vector<std::vector<Block>> temporary_grid = world.blocks; 
-            for(int i = 0; i < world.width; i++)
-            {
-                int surface = surface_cache[i];
-                for(int j = 0; j < world.height; j++)
-                {
-                    int neighbours = 0;
-                    for(int x = i - 1; x <= i + 1; x++)
-                    {
-                        for(int y = j - 1; y <= j + 1; y++)
-                        {
-                            if(x == i && y == j) continue;
+        for (int x = 0; x < width; x++) {
+            surface_cache[x] = world.get_surface_height(x) + OFFSET;
+            for (int y = 0; y < height; y++) {
+                current_bits[x + y * width] = (world.blocks[x][y].type != BlockType::Air);
+            }
+        }
 
-                            if(x < 0 || x >= world.width || y < 0 || y >= world.height) {
-                                neighbours++;
-                            } 
-                            else if(world.blocks[x][y].type != BlockType::Air) {
-                                neighbours++;
+        for (int iteration = 0; iteration < ITERATIONS; iteration++) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int neighbors = 0;
+                    for (int ny = y - 1; ny <= y + 1; ny++) {
+                        for (int nx = x - 1; nx <= x + 1; nx++) {
+                            if (nx == x && ny == y) continue;
+                            if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+                                neighbors++;
+                            } else if (current_bits[nx + ny * width]) {
+                                neighbors++;
                             }
                         }
                     }
-                    if(neighbours <= WALL_THRESHOLD) { buffer[i][j] = Block(BlockType::Air, Solid, world.blocks[i][j].wall); }
-                    else{ buffer[i][j] = Block(world.blocks[i][j].wall); }
+                    iteration_bits[x + y * width] = (neighbors > WALL_THRESHOLD);
                 }
             }
-            std::swap(world.blocks, buffer); // I swap the pointers here instead of re-assigning buffer to world.blocks 
+            current_bits.swap(iteration_bits); // Swap pointers rather than reassigning to use less memory
+        }
+
+        for (int x = 0; x < width; x++) {
+            for (int y = surface_cache[x]; y < height; y++) {
+                if (current_bits[x + y * width])
+                    world.blocks[x][y] = Block(world.blocks[x][y].wall);
+                else
+                    world.blocks[x][y] = Block(BlockType::Air, Solid, world.blocks[x][y].wall);
+            }
         }
     }
 };
