@@ -1,5 +1,6 @@
 #include "splashkit.h"
-#include "Data/WorldGenerationHeaders.h"
+#include "World/World.h"
+#include "CellularAutomata/CellularAutomata.h"
 
 int main()
 {

@@ -1,8 +1,8 @@
 #pragma once
-
 #include "splashkit.h"
-#include "splashkit-arrays.h"
-#include "src/BiomeSystem/BiomeSystem.h"
+
+#include "../BiomeSystem/BiomeSystem.h"
+#include "../PerlinNoise/PerlinNoise.h"
 
 #include <vector>
 #include <array>

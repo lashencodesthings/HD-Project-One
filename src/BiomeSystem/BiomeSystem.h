@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <map>
-#include "src/Block/Block.h"
+#include "../Block/Block.h"
 
 enum class BiomeType {
     Plains,

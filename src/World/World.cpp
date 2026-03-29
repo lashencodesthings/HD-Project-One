@@ -1,7 +1,7 @@
 #include "World.h"
-#include "Block/Block.h"
-#include "BiomeSystem/BiomeSystem.h"
-#include "include/PerlinNoise.hpp"
+#include "../Block/Block.h"
+#include "../BiomeSystem/BiomeSystem.h"
+#include "../PerlinNoise/PerlinNoise.h"
 
 const LayerConfig WorldDefaults::layers{20, 50, 200, 20};
 const TerrainConfig WorldDefaults::terrain{0.5, 0.05, 0.25, 0.1, 1};
