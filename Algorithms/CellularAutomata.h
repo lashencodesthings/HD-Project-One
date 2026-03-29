@@ -64,9 +64,10 @@ private:
                         current[block_index - 1] + current[block_index + 1] +
                         current[block_index + width - 1] + current[block_index + width] + current[block_index + width + 1];
 
-                    next[block_index] = (neighbours >= WALL_THRESHOLD);
+                    next[block_index] = (neighbours > WALL_THRESHOLD);
                 }
             }
+            std::swap(current, next); 
         }
 
         for (int x = 0; x < width; ++x) {

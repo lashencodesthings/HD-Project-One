@@ -29,7 +29,7 @@ struct NoiseConfig
     int surface_offset;
     int underground_offset;
     int cavern_offset;
-};
+};  
 
 namespace WorldDefaults
 {
