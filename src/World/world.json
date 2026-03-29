@@ -1,0 +1,22 @@
+{
+  "terrain": {
+    "amplitude_ratio": 0.25,
+    "base_height_ratio": 0.5,
+    "big_scale": 0.01,
+    "small_scale": 0.1,
+    "small_weight": 0.3
+  },
+  "noise": {
+    "surface_offset": 100,
+    "underground_offset": 200
+  },
+  "layers": [
+    {
+      "thickness": 5,
+      "variation": 2,
+      "noise_scale": 0.05,
+      "block": "Dirt",
+      "wall": "DirtWall"
+    }
+  ]
+}

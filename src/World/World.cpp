@@ -3,6 +3,11 @@
 #include "../BiomeSystem/BiomeSystem.h"
 #include "../PerlinNoise/PerlinNoise.h"
 
+// For the JSON library
+#include <fstream>
+#include "../../libraries/json.hpp"
+using json = nlohmann::json;
+
 /*
     Author: Lashen Dharmadasa
     
@@ -90,7 +95,7 @@ struct WorldConfig {
 };
 
 // World Constructor
-World::World(int w, int h, unsigned int s, int z, WorldConfig cfg) : width(w), height(h), seed(s), zoom(z), config(cfg),
+World::World(int w, int h, unsigned int s, int z, const WorldConfig& cfg) : width(w), height(h), seed(s), zoom(z), config(cfg),
       noise_surface(s + cfg.noise.surface_offset),
       noise_underground(s + cfg.noise.underground_offset)
 {
