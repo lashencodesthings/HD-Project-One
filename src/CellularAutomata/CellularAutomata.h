@@ -21,7 +21,6 @@ class CellularAutomata {
         const int WALL_THRESHOLD = 4;
         const int NOISE_DENSITY = 35;
         const int ITERATIONS = 12;
-        const int OFFSET = 5;
 
         std::uniform_int_distribution<int> percent_dist{0, 99};
 };

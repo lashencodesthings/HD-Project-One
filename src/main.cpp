@@ -11,7 +11,7 @@ void load_world()
 
     if (world) delete world;
     world = new World(960, 540, 12345, 1, cfg);
-    world->generate();
+    world -> generate();
 
     if (ca) delete ca;
     ca = new CellularAutomata(*world);

@@ -15,12 +15,12 @@ bool CellularAutomata::add_air_hole() {
 
 void CellularAutomata::seed_noise() {
     for (int x = 0; x < world.width; ++x) {
-        int surface_height = world.get_surface_height(x) + OFFSET;
+        int surface_height = world.surface_map[x];
         for (int y = surface_height; y < world.height; ++y) {
-            if (add_air_hole())
-                world.blocks[x][y] = Block(BlockType::Air, Solid, world.blocks[x][y].wall);
-            else
-                world.blocks[x][y] = Block(world.blocks[x][y].wall);
+            if (add_air_hole()) {
+                Block &old = world.blocks[x][y];
+                world.blocks[x][y] = Block(BlockType::Air, Solid, old.wall);
+            }
         }
     }
 }
@@ -31,10 +31,8 @@ void CellularAutomata::apply() {
 
     std::vector<uint8_t> current(width * height);
     std::vector<uint8_t> next(width * height);
-    std::vector<int> surface_height(width);
 
     for (int x = 0; x < width; ++x) {
-        surface_height[x] = world.get_surface_height(x) + OFFSET;
         for (int y = 0; y < height; ++y) { current[x + y * width] = (world.blocks[x][y].type != BlockType::Air); }
     }
 
@@ -57,9 +55,13 @@ void CellularAutomata::apply() {
     }
 
     for (int x = 0; x < width; ++x) {
-        for (int y = surface_height[x]; y < height; ++y) {
+        for (int y = world.surface_map[x]; y < height; ++y) {
             int block_index = x + y * width;
-            world.blocks[x][y] = current[block_index] ? Block(world.blocks[x][y].wall) : Block(BlockType::Air, Solid, world.blocks[x][y].wall);
+            if (current[block_index]) {
+                world.blocks[x][y] = world.get_block_at(x, y);
+            } else {
+                world.blocks[x][y] = Block(BlockType::Air, Solid, world.blocks[x][y].wall);
+            }
         }
     }
 }

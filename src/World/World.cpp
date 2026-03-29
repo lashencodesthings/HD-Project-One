@@ -60,9 +60,7 @@
 
 // World Constructor
 
-World::World(int w, int h, unsigned int s, int z, const WorldConfig& cfg) : width(w), height(h), seed(s), zoom(z), config(cfg),
-      noise_surface(s + cfg.noise.surface_offset),
-      noise_underground(s + cfg.noise.underground_offset)
+World::World(int w, int h, unsigned int s, int z, const WorldConfig& cfg) : width(w), height(h), seed(s), zoom(z), config(cfg), noise_surface(s + cfg.noise.surface_offset)
 {
     surface_base = height * config.terrain.base_height_ratio;
     blocks.assign(width, std::vector<Block>(height, Block(Air)));
@@ -73,13 +71,50 @@ World::World(int w, int h, unsigned int s, int z, const WorldConfig& cfg) : widt
 int World::get_surface_height(int x)
 {
     double amplitude = height * config.terrain.amplitude_ratio;
-
     double big = noise_surface.value({x * config.terrain.big_scale, 0.0}) * amplitude;
-
-    double small = noise_surface.value({x * config.terrain.small_scale, 0.0}) *
-                   (amplitude * config.terrain.small_weight);
+    double small = noise_surface.value({x * config.terrain.small_scale, 0.0}) * (amplitude * config.terrain.small_weight);
 
     return int(surface_base + big + small);
+}
+
+Block World::get_block_at(int x, int y)
+{
+    int surface = surface_map[x];
+    Biome& biome = biome_data[biome_map[x]];
+
+    if (y < surface)
+    {
+        return Block(Air);
+    }
+
+    std::vector<int> layer_boundaries;
+    int current_y = surface;
+
+    for (const LayerConfig& layer : config.layers)
+    {
+        current_y += layer.thickness;
+        layer_boundaries.push_back(current_y);
+    }
+
+    int layer_index = 0;
+    while (layer_index < (int)config.layers.size() && y >= layer_boundaries[layer_index])
+    {
+        layer_index++;
+    }
+
+    BlockType block_type;
+    WallType wall_type;
+
+    switch (layer_index)
+    {
+        case 0: block_type = biome.surface_block; wall_type = AirWall; break;
+        case 1: block_type = biome.subsurface_block; wall_type = biome.underground_wall; break;
+        case 2: block_type = biome.underground_block; wall_type = biome.underground_wall; break;
+        case 3: block_type = biome.cavern_block; wall_type = biome.cavern_wall; break;
+        default: block_type = biome.underworld_block; wall_type = biome.underworld_wall; break;
+    }
+
+    return Block(block_type, Solid, wall_type);
 }
 
 // Generate Terrain
@@ -87,7 +122,7 @@ int World::get_surface_height(int x)
 void World::generate()
 {
     biome_map = generate_biome_map(width, seed);
-    std::vector<int> surface_map(width);
+    surface_map.resize(width);
 
     for (int x = 0; x < width; x++)
     {
@@ -97,59 +132,19 @@ void World::generate()
     for (int x = 0; x < width; x++)
     {
         int surface = surface_map[x];
-        Biome &biome = biome_data[biome_map[x]];
+
+        std::vector<int> layer_boundaries;
+        int current_y = surface;
+        
+        for (const LayerConfig& layer : config.layers)
+        {
+            current_y += layer.thickness;
+            layer_boundaries.push_back(current_y);
+        }
 
         for (int y = 0; y < height; y++)
         {
-            if (y < surface)
-            {
-                blocks[x][y] = Block(Air);
-                continue;
-            }
-
-            int depth = y - surface;
-
-            if (depth == 0)
-            {
-                blocks[x][y] = Block(biome.surface_block, Solid, AirWall);
-                continue;
-            }
-
-            bool placed = false;
-            int layer_top = surface;
-            
-            for (size_t i = 0; i < config.layers.size(); i++)
-            {
-                const LayerConfig &layer = config.layers[i];
-                double n = noise_underground.value({x * layer.noise_scale, layer_top * layer.noise_scale});
-                int layer_bottom = layer_top + layer.thickness + int(n * layer.variation);
-
-                if (y >= layer_top && y < layer_bottom)
-                {
-                    BlockType block_type;
-                    WallType wall_type;
-
-                    switch (i)
-                    {
-                        case 0: block_type = biome.surface_block; wall_type = AirWall; break;
-                        case 1: block_type = biome.subsurface_block; wall_type = biome.underground_wall; break;
-                        case 2: block_type = biome.underground_block; wall_type = biome.underground_wall; break;
-                        case 3: block_type = biome.cavern_block; wall_type = biome.cavern_wall; break;
-                        default: block_type = biome.underworld_block; wall_type = biome.underworld_wall; break;
-                    }
-
-                    blocks[x][y] = Block(block_type, Solid, wall_type);
-                    placed = true;
-                    break;
-                }
-
-                layer_top = layer_bottom;
-            }
-            if (!placed)
-            {
-                const LayerConfig &last = config.layers.back();
-                blocks[x][y] = Block(last.block, Solid, last.wall);
-            }
+            blocks[x][y] = get_block_at(x, y);
         }
     }
 }
@@ -169,11 +164,17 @@ void World::draw()
             int size = BLOCK_SIZE * zoom;
 
             if (block.type != Air)
+            {
                 fill_rectangle(block_colors[block.type], bx, by, size, size);
+            }
             else if (block.wall != AirWall)
+            {
                 fill_rectangle(wall_colors[block.wall], bx, by, size, size);
+            }
             else
+            {
                 fill_rectangle(block_colors[Air], bx, by, size, size);
+            }
         }
     }
 }

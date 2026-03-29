@@ -3,9 +3,9 @@
 
 std::map<BiomeType, Biome> biome_data = {
     {BiomeType::Plains, {Grass, Dirt, Stone, Cavernstone, Hellstone, UndergroundWall, CavernWall, HellWall}},
-    {BiomeType::Desert, {Sand, Sand, Sandstone, Sandstone, Hellstone, UndergroundWall, CavernWall, HellWall}},
-    {BiomeType::Snow, {Snow, Snow, Ice, Ice, Hellstone, UndergroundWall, CavernWall, HellWall}},
-    {BiomeType::Jungle, {JungleGrass, JungleDirt, Stone, Stone, Hellstone, UndergroundWall, CavernWall, HellWall}}
+    {BiomeType::Desert, {Sand, Sand, Sandstone, Cavernstone, Hellstone, UndergroundWall, CavernWall, HellWall}},
+    {BiomeType::Snow, {Snow, Snow, Ice, Cavernstone, Hellstone, UndergroundWall, CavernWall, HellWall}},
+    {BiomeType::Jungle, {JungleGrass, JungleDirt, Stone, Cavernstone, Hellstone, UndergroundWall, CavernWall, HellWall}}
 };
 
 std::vector<BiomeType> sequence = {

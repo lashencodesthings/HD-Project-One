@@ -10,27 +10,30 @@
 
 class World
 {
-public:
-    int width, height;
-    unsigned int seed;
-    int zoom;
+    public:
+        int width, height;
+        unsigned int seed;
+        int zoom;
 
-    std::vector<std::vector<Block>> blocks;
+        std::vector<std::vector<Block>> blocks;
 
-    WorldConfig config;
-    
-    Noise noise_surface;
-    Noise noise_underground;
+        WorldConfig config;
+        
+        Noise noise_surface;
 
-    int surface_base;
+        int surface_base;
 
-    std::vector<BiomeType> biome_map;
+        std::vector<BiomeType> biome_map;
 
-    const int BLOCK_SIZE = 2;
+        Block get_block_at(int x, int y);
 
-    World(int w, int h, unsigned int s, int z, const WorldConfig& cfg);
+        const int BLOCK_SIZE = 2;
 
-    int get_surface_height(int x);
-    void generate();
-    void draw();
+        std::vector<int> surface_map;
+
+        World(int w, int h, unsigned int s, int z, const WorldConfig& cfg);
+
+        int get_surface_height(int x);
+        void generate();
+        void draw();
 };
