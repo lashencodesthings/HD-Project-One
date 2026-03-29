@@ -46,46 +46,39 @@ private:
 
     void apply()
     {
+        std::vector<int> surface_cache(world.width);
+        std::vector<std::vector<Block>> buffer = world.blocks;
+
+        for(int x = 0; x < world.width; x++) surface_cache[x] = world.get_surface_height(x) + 5;
+
         for(int iteration = 0; iteration < ITERATIONS; iteration++)
         {
             std::vector<std::vector<Block>> temporary_grid = world.blocks; 
             for(int i = 0; i < world.width; i++)
             {
+                int surface = surface_cache[i];
                 for(int j = 0; j < world.height; j++)
                 {
-                    if (j < world.get_surface_height(i) + 8) continue;
-
-                    int neighbour_wall_count = 0;
+                    int neighbours = 0;
                     for(int x = i - 1; x <= i + 1; x++)
                     {
                         for(int y = j - 1; y <= j + 1; y++)
                         {
                             if(x == i && y == j) continue;
 
-                            if(x >= 0 && x < world.width && y >= 0 && y < world.height)
-                            {
-                                if(world.blocks[x][y].type != BlockType::Air)
-                                {
-                                    neighbour_wall_count++;
-                                }
-                            }
-                            else
-                            {
-                                neighbour_wall_count++;
+                            if(x < 0 || x >= world.width || y < 0 || y >= world.height) {
+                                neighbours++;
+                            } 
+                            else if(world.blocks[x][y].type != BlockType::Air) {
+                                neighbours++;
                             }
                         }
                     }
-                    if(neighbour_wall_count <= WALL_THRESHOLD)
-                    {
-                        temporary_grid[i][j] = Block(BlockType::Air, Solid, world.blocks[i][j].wall); 
-                    }
-                    else
-                    {
-                        temporary_grid[i][j] = Block(world.blocks[i][j].wall); 
-                    }
+                    if(neighbours <= WALL_THRESHOLD) { buffer[i][j] = Block(BlockType::Air, Solid, world.blocks[i][j].wall); }
+                    else{ buffer[i][j] = Block(world.blocks[i][j].wall); }
                 }
             }
-            world.blocks = temporary_grid;
+            std::swap(world.blocks, buffer); // I swap the pointers here instead of re-assigning buffer to world.blocks 
         }
     }
 };
