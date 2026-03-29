@@ -70,7 +70,6 @@ class World
 
         int get_surface_height(int x);
         WorldLayer get_layer(double x, double y, int surface);
-        void smooth(std::vector<int> &map);
         void generate();
         void draw();
 };

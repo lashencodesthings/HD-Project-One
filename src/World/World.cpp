@@ -3,79 +3,116 @@
 #include "../BiomeSystem/BiomeSystem.h"
 #include "../PerlinNoise/PerlinNoise.h"
 
-const LayerConfig WorldDefaults::layers{20, 50, 200, 20};
-const TerrainConfig WorldDefaults::terrain{0.5, 0.05, 0.25, 0.1, 1};
-const NoiseConfig WorldDefaults::noise{0, 100, 200};
+/*
+    Author: Lashen Dharmadasa
+    
+    Description: 
+        This system generates the 2D terrain for this game, using Perlin Noise.
+        It has a lot of configuration variables, for my experimentation during this project.
+        It's crude in that it completes the first and second pass for biomes and simple generation.
+        Tunnelling and other features come later on.
 
-const int WorldDefaults::surface_variation = 5;
-const int WorldDefaults::underground_variation = 10;
-const int WorldDefaults::cavern_variation = 15;
+    Parameters:
+        1. Terrain Shape
+            - amplitude_ratio
+                Controls how tall terrain is are relative to the world height.
 
-World::World(int w, int h, unsigned int s, int z)
-    : width(w), height(h), seed(s), zoom(z),
-      noise_surface(s + WorldDefaults::noise.surface_offset),
-      noise_underground(s + WorldDefaults::noise.underground_offset),
-      noise_cavern(s + WorldDefaults::noise.cavern_offset),
-      layer_config(WorldDefaults::layers),
-      terrain_config(WorldDefaults::terrain)
+            - base_height_ratio
+                The baseline surface height of the terrain.
+
+            - big_scale
+                Frequency of large terrain hills.
+                A lower value provides wide and smooth hills.
+                A Higher value produces rapid elevation changes in the terrain.
+
+            - small_scale
+                Frequency of fine detail noise like thin hills.
+
+            - small_weight
+                Influence of fine detail noise.
+                A higher value provides rougher terrain.
+
+        2. Terrain Noise Config
+            I added offsets applied to the world seed to generate independent noise fields for each layer, as I felt having the same shape was not appealing.
+
+            - surface_offset
+                Used for terrain height offsets.
+
+            - underground_offset
+                Used for underground layer variation
+
+        3. Seperate layer config
+            - thickness
+                Base thickness of the layer.
+
+            - variation
+                Amount of noise-based variation in thickness.
+
+            - noise_scale
+                Controls how frequently thickness of the layer changes across the world.
+
+            - block
+                Block used for this layer.
+
+            - wall
+                Background wall for this layer.
+*/
+
+
+// Create structs for configuration
+
+struct TerrainConfig { 
+    double amplitude_ratio;
+    double base_height_ratio;
+    double big_scale;
+    double small_scale;
+    double small_weight;
+};
+
+struct NoiseConfig {
+    int surface_offset;
+    int underground_offset;
+};
+
+struct LayerConfig {
+    int thickness;
+    int variation;
+    double noise_scale;
+
+    BlockType block;
+    WallType wall;
+};
+
+struct WorldConfig {
+    TerrainConfig terrain;
+    NoiseConfig noise;
+    std::vector<LayerConfig> layers;
+};
+
+// World Constructor
+World::World(int w, int h, unsigned int s, int z, WorldConfig cfg) : width(w), height(h), seed(s), zoom(z), config(cfg),
+      noise_surface(s + cfg.noise.surface_offset),
+      noise_underground(s + cfg.noise.underground_offset)
 {
-    surface_base = height * 0.2;
+    surface_base = height * config.terrain.base_height_ratio;
     blocks.assign(width, std::vector<Block>(height, Block(Air)));
 }
 
+// Surface Height
+
 int World::get_surface_height(int x)
 {
-    double amplitude = height * terrain_config.amplitude_ratio;
+    double amplitude = height * config.terrain.amplitude_ratio;
 
-    double big = noise_surface.value({x * terrain_config.big_scale, 0.0}) * amplitude;
-    double small = noise_surface.value({x * terrain_config.small_scale, 0.0}) * (amplitude * terrain_config.small_weight);
+    double big = noise_surface.value({x * config.terrain.big_scale, 0.0}) * amplitude;
+
+    double small = noise_surface.value({x * config.terrain.small_scale, 0.0}) *
+                   (amplitude * config.terrain.small_weight);
 
     return int(surface_base + big + small);
 }
 
-WorldLayer World::get_layer(double x, double y, int surface)
-{
-    double s_noise = noise_surface.value({x, y});
-    double u_noise = noise_underground.value({x, y});
-    double c_noise = noise_cavern.value({x, y});
-
-    int surface_end = surface + layer_config.surface + int(s_noise * WorldDefaults::surface_variation);
-    int underground_end = surface_end + layer_config.underground + int(u_noise * WorldDefaults::underground_variation);
-    int cavern_end = underground_end + layer_config.cavern + int(c_noise * WorldDefaults::cavern_variation);
-
-    if (y < surface) return WorldLayer::Space;
-    if (y < surface_end) return WorldLayer::Surface;
-    if (y < underground_end) return WorldLayer::Underground;
-    if (y < cavern_end) return WorldLayer::Cavern;
-
-    return WorldLayer::Underworld;
-}
-
-void World::smooth(std::vector<int> &map)
-{
-    int r = terrain_config.smoothing_radius;
-    int window = 2 * r + 1;
-
-    std::vector<int> result = map;
-
-    int sum = 0;
-
-    for (int i = 0; i < window; i++)
-        sum += map[i];
-
-    for (int x = r; x < width - r; x++)
-    {
-        result[x] = sum / window;
-
-        if (x + r + 1 < width)
-            sum += map[x + r + 1];
-
-        if (x - r >= 0)
-            sum -= map[x - r];
-    }
-
-    map = result;
-}
+// Generate Terrain
 
 void World::generate()
 {
@@ -87,56 +124,64 @@ void World::generate()
         surface_map[x] = get_surface_height(x);
     }
 
-    smooth(surface_map);
-
     for (int x = 0; x < width; x++)
     {
-        int surface_height = surface_map[x];
+        int surface = surface_map[x];
         Biome &biome = biome_data[biome_map[x]];
 
         for (int y = 0; y < height; y++)
         {
-            if (y < surface_height)
+            // SKY
+            if (y < surface)
             {
                 blocks[x][y] = Block(Air);
                 continue;
             }
 
-            int depth = y - surface_height;
+            int depth = y - surface;
 
+            // TOP BLOCK
             if (depth == 0)
             {
                 blocks[x][y] = Block(biome.surface_block, Solid, AirWall);
                 continue;
             }
 
-            WorldLayer layer = get_layer(x, y, surface_height);
+            // LAYERS
+            int current_y = surface;
+            bool placed = false;
 
-            switch (layer)
+            for (size_t i = 0; i < config.layers.size(); i++)
             {
-                case WorldLayer::Surface:
-                    blocks[x][y] = Block(biome.subsurface_block, Solid, biome.underground_wall);
-                    break;
+                const LayerConfig &layer = config.layers[i];
 
-                case WorldLayer::Underground:
-                    blocks[x][y] = Block(biome.underground_block, Solid, biome.underground_wall);
-                    break;
+                double n = noise_underground.value(
+                    {x * layer.noise_scale, y * layer.noise_scale}
+                );
 
-                case WorldLayer::Cavern:
-                    blocks[x][y] = Block(biome.cavern_block, Solid, biome.cavern_wall);
-                    break;
+                int layer_end = current_y + layer.thickness + int(n * layer.variation);
 
-                case WorldLayer::Underworld:
-                    blocks[x][y] = Block(biome.underworld_block, Solid, biome.underworld_wall);
+                if (y < layer_end)
+                {
+                    blocks[x][y] = Block(layer.block, Solid, layer.wall);
+                    placed = true;
                     break;
+                }
 
-                default:
-                    blocks[x][y] = Block(Air);
-                    break;
+                current_y = layer_end;
+            }
+
+            // FALLBACK (deepest layer)
+            if (!placed)
+            {
+                const LayerConfig &last = config.layers.back();
+                blocks[x][y] = Block(last.block, Solid, last.wall);
             }
         }
     }
 }
+
+// Draw World
 
 void World::draw()
 {
@@ -146,16 +191,16 @@ void World::draw()
         {
             const Block &block = blocks[x][y];
 
-            int block_x = x * BLOCK_SIZE * zoom;
-            int block_y = y * BLOCK_SIZE * zoom;
+            int bx = x * BLOCK_SIZE * zoom;
+            int by = y * BLOCK_SIZE * zoom;
             int size = BLOCK_SIZE * zoom;
 
             if (block.type != Air)
-                fill_rectangle(block_colors[block.type], block_x, block_y, size, size);
+                fill_rectangle(block_colors[block.type], bx, by, size, size);
             else if (block.wall != AirWall)
-                fill_rectangle(wall_colors[block.wall], block_x, block_y, size, size);
+                fill_rectangle(wall_colors[block.wall], bx, by, size, size);
             else
-                fill_rectangle(block_colors[Air], block_x, block_y, size, size);
+                fill_rectangle(block_colors[Air], bx, by, size, size);
         }
     }
 }

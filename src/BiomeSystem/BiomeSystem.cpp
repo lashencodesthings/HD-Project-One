@@ -8,6 +8,15 @@ std::map<BiomeType, Biome> biome_data = {
     {BiomeType::Jungle, {JungleGrass, JungleDirt, Stone, Stone, Hellstone, UndergroundWall, CavernWall, HellWall}}
 };
 
+std::vector<BiomeType> sequence = {
+    BiomeType::Plains,
+    BiomeType::Desert,
+    BiomeType::Plains,
+    BiomeType::Snow,
+    BiomeType::Plains,
+    BiomeType::Jungle
+};
+
 std::vector<BiomeType> generate_biome_map(int width, unsigned int seed)
 {
     std::vector<BiomeType> map(width);
@@ -16,15 +25,22 @@ std::vector<BiomeType> generate_biome_map(int width, unsigned int seed)
 
     int x = 0;
 
-    while (x < width)
+    for (BiomeType biome : sequence)
     {
-        BiomeType biome = static_cast<BiomeType>(rand() % 4);
-        int size = rnd(100, 300);
+        int size = 100 + rand() % 101;
 
         for (int i = 0; i < size && x < width; i++, x++)
         {
             map[x] = biome;
         }
+
+        if (x >= width) break;
+    }
+
+    while (x < width)
+    {
+        map[x] = sequence.back();
+        x++;
     }
 
     return map;
