@@ -1,22 +1,44 @@
 #include "splashkit.h"
 #include "World/World.h"
 #include "CellularAutomata/CellularAutomata.h"
+
+World *world = nullptr;
+CellularAutomata *ca = nullptr;
+
+void load_world()
+{
+    WorldConfig cfg = load_world_config("world.json");
+
+    if (world) delete world;
+    world = new World(960, 540, 12345, 1, cfg);
+    world->generate();
+
+    if (ca) delete ca;
+    ca = new CellularAutomata(*world);
+}
+
 int main()
 {
     open_window("Game", 1920, 1080);
 
-    WorldConfig config = load_world_config("world.json");
-    World world(960, 540, 52u, 1, config);
+    while (!quit_requested())
+    {
+        process_events();
 
-    world.generate();
+        if (key_typed(SPACE_KEY))
+        {
+            clear_screen();
+            load_world();
 
-    world.generate();
+            if (ca) ca->run();
+            if (world) world->draw();
+            
+            refresh_screen();
+        }
+    }
 
-    CellularAutomata ca(world);
-    ca.run();
+    if (ca) delete ca;
+    if (world) delete world;
 
-    world.draw();
-
-    refresh_screen(60);
-    delay(500000);
+    return 0;
 }
