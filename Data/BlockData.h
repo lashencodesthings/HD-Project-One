@@ -28,10 +28,19 @@ enum BlockState {
 struct Block {
     BlockType type;
     BlockState state;
-    WallType back_wall;
+    WallType wall;
 
-    Block(BlockType type_value, BlockState state_value, WallType wall_value) : type(type_value), state(state_value), back_wall(wall_value) {}
-    Block(BlockType type_value) : type(type_value), state(Solid), back_wall(AirWall) {}
+    Block(BlockType type_value, BlockState state_value, WallType wall_value) : type(type_value), state(state_value), wall(wall_value) {}
+    Block(BlockType type_value) : type(type_value), state(Solid), wall(AirWall) {}
+    Block(WallType wall_value): state(Solid), wall(wall_value) {
+        switch (wall_value) {
+            case UndergroundWall: type = Dirt; break;
+            case CavernWall: type = Stone; break;
+            case HellWall: type = Hellstone; break;
+            case AirWall:
+            default: type = Air; break;
+        }
+    }
 };
 
 std::map<BlockType, color> block_colors = {
