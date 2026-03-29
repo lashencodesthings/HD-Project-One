@@ -11,12 +11,9 @@
     "underground_offset": 200
   },
   "layers": [
-    {
-      "thickness": 5,
-      "variation": 2,
-      "noise_scale": 0.05,
-      "block": "Dirt",
-      "wall": "DirtWall"
-    }
+    { "thickness": 1, "variation": 0, "noise_scale": 0.05 },
+    { "thickness": 3, "variation": 1, "noise_scale": 0.05 },
+    { "thickness": 5, "variation": 2, "noise_scale": 0.05 },
+    { "thickness": 10, "variation": 3, "noise_scale": 0.05 }
   ]
 }

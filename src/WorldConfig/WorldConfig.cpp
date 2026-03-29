@@ -1,65 +1,52 @@
 #include "WorldConfig.h"
+#include "splashkit.h"
 
-#include <fstream>
-#include "../../libraries/json.hpp"
-
-using json = nlohmann::json;
-
-// Json Loading
-json load_json(const std::string& path)
-{
-    std::ifstream file(path);
-    if (!file)
-    {
-        throw std::runtime_error("Failed to open world config file");
-    }
-
-    json j;
-    file >> j; // Overloaded operator by Nlohmann that parses the read JSON text into the json_text variable
-    return j;
-}
-
-// Private parsers for parsing the externally read json text into the program's config values
-static TerrainConfig parse_terrain(const json& j)
+// Private parsers
+static TerrainConfig parse_terrain(json j)
 {
     return {
-        j["amplitude_ratio"],
-        j["base_height_ratio"],
-        j["big_scale"],
-        j["small_scale"],
-        j["small_weight"]
+        json_read_number_as_double(j, "amplitude_ratio"),
+        json_read_number_as_double(j, "base_height_ratio"),
+        json_read_number_as_double(j, "big_scale"),
+        json_read_number_as_double(j, "small_scale"),
+        json_read_number_as_double(j, "small_weight")
     };
 }
 
-static NoiseConfig parse_noise(const json& j)
+static NoiseConfig parse_noise(json j)
 {
     return {
-        j["surface_offset"],
-        j["underground_offset"]
+        json_read_number_as_int(j, "surface_offset"),
+        json_read_number_as_int(j, "underground_offset")
     };
 }
 
-static LayerConfig parse_layer(const json& j)
+static LayerConfig parse_layer(json j)
 {
     return {
-        j["thickness"],
-        j["variation"],
-        j["noise_scale"],
-        (BlockType)(j["block"]),
-        (WallType)(j["wall"])
+        json_read_number_as_int(j, "thickness"),
+        json_read_number_as_int(j, "variation"),
+        json_read_number_as_double(j, "noise_scale")
     };
 }
 
-// Public function for returning a world config from the extracted json and private parser values
-WorldConfig load_world_config(const std::string& path)
+// Public function
+WorldConfig load_world_config(const string &path)
 {
-    json j = load_json(path);
+    json j = json_from_file(path);
 
     WorldConfig config;
-    config.terrain = parse_terrain(j["terrain"]);
-    config.noise = parse_noise(j["noise"]);
+    config.terrain = parse_terrain(json_read_object(j, "terrain"));
+    config.noise = parse_noise(json_read_object(j, "noise"));
+    
+    // Parse terrain and noise objects
+    config.terrain = parse_terrain(json_read_object(j, "terrain"));
+    config.noise = parse_noise(json_read_object(j, "noise"));
 
-    for (const auto& layer_json : j["layers"])
+    std::vector<json> layers_array;
+    json_read_array(j, "layers", layers_array);
+
+    for (json layer_json : layers_array)
     {
         config.layers.push_back(parse_layer(layer_json));
     }

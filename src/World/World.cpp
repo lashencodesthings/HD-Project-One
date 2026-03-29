@@ -3,11 +3,6 @@
 #include "../BiomeSystem/BiomeSystem.h"
 #include "../PerlinNoise/PerlinNoise.h"
 
-// For the JSON library
-#include <fstream>
-#include "../../libraries/json.hpp"
-using json = nlohmann::json;
-
 /*
     Author: Lashen Dharmadasa
     
@@ -63,38 +58,8 @@ using json = nlohmann::json;
                 Background wall for this layer.
 */
 
-
-// Create structs for configuration
-
-struct TerrainConfig { 
-    double amplitude_ratio;
-    double base_height_ratio;
-    double big_scale;
-    double small_scale;
-    double small_weight;
-};
-
-struct NoiseConfig {
-    int surface_offset;
-    int underground_offset;
-};
-
-struct LayerConfig {
-    int thickness;
-    int variation;
-    double noise_scale;
-
-    BlockType block;
-    WallType wall;
-};
-
-struct WorldConfig {
-    TerrainConfig terrain;
-    NoiseConfig noise;
-    std::vector<LayerConfig> layers;
-};
-
 // World Constructor
+
 World::World(int w, int h, unsigned int s, int z, const WorldConfig& cfg) : width(w), height(h), seed(s), zoom(z), config(cfg),
       noise_surface(s + cfg.noise.surface_offset),
       noise_underground(s + cfg.noise.underground_offset)
@@ -136,7 +101,6 @@ void World::generate()
 
         for (int y = 0; y < height; y++)
         {
-            // SKY
             if (y < surface)
             {
                 blocks[x][y] = Block(Air);
@@ -145,38 +109,42 @@ void World::generate()
 
             int depth = y - surface;
 
-            // TOP BLOCK
             if (depth == 0)
             {
                 blocks[x][y] = Block(biome.surface_block, Solid, AirWall);
                 continue;
             }
 
-            // LAYERS
-            int current_y = surface;
             bool placed = false;
-
+            int layer_top = surface;
+            
             for (size_t i = 0; i < config.layers.size(); i++)
             {
                 const LayerConfig &layer = config.layers[i];
+                double n = noise_underground.value({x * layer.noise_scale, layer_top * layer.noise_scale});
+                int layer_bottom = layer_top + layer.thickness + int(n * layer.variation);
 
-                double n = noise_underground.value(
-                    {x * layer.noise_scale, y * layer.noise_scale}
-                );
-
-                int layer_end = current_y + layer.thickness + int(n * layer.variation);
-
-                if (y < layer_end)
+                if (y >= layer_top && y < layer_bottom)
                 {
-                    blocks[x][y] = Block(layer.block, Solid, layer.wall);
+                    BlockType block_type;
+                    WallType wall_type;
+
+                    switch (i)
+                    {
+                        case 0: block_type = biome.surface_block; wall_type = AirWall; break;
+                        case 1: block_type = biome.subsurface_block; wall_type = biome.underground_wall; break;
+                        case 2: block_type = biome.underground_block; wall_type = biome.underground_wall; break;
+                        case 3: block_type = biome.cavern_block; wall_type = biome.cavern_wall; break;
+                        default: block_type = biome.underworld_block; wall_type = biome.underworld_wall; break;
+                    }
+
+                    blocks[x][y] = Block(block_type, Solid, wall_type);
                     placed = true;
                     break;
                 }
 
-                current_y = layer_end;
+                layer_top = layer_bottom;
             }
-
-            // FALLBACK (deepest layer)
             if (!placed)
             {
                 const LayerConfig &last = config.layers.back();

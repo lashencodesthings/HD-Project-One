@@ -17,10 +17,10 @@ public:
 
     std::vector<std::vector<Block>> blocks;
 
+    WorldConfig config;
+    
     Noise noise_surface;
     Noise noise_underground;
-
-    WorldConfig config;
 
     int surface_base;
 

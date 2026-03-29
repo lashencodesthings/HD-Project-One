@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "../Block/Block.h"
+#include "splashkit.h"
 
 // Configure the structs for the configuration
 struct TerrainConfig { 
@@ -33,4 +34,4 @@ struct WorldConfig {
 };
 
 // Function for loading the world data from a configuration json file
-WorldConfig load_world_config(const std::string& path);
+WorldConfig load_world_config(const string& path);
