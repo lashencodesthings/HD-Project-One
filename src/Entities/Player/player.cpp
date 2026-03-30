@@ -60,22 +60,50 @@ bool is_colliding(World& world, double x, double y, double w, double h)
     return false;
 }
 
+// I coded this such that it allows the player to step up 1 block maximum
 void horizontal_collision(Player &player, World &world)
 {
-    if (is_colliding(world, player.x, player.y, player.w, player.h))
+    int tile_size = world.BLOCK_SIZE * world.zoom;
+
+    if (player.vx > 0)
     {
-        int tile_size = world.BLOCK_SIZE * world.zoom;
-        if (player.vx > 0)
+        // Check if the right side would collide at current height
+        if (is_colliding(world, player.x + player.vx, player.y, player.w, player.h))
         {
-            int right_tile_edge = ((int)(player.x + player.w) / tile_size) * tile_size;
-            player.x = right_tile_edge - player.w;
+            // Check if moving up 1 block avoids collision
+            if (!is_colliding(world, player.x + player.vx, player.y - tile_size, player.w, player.h))
+            {
+                player.y -= tile_size; // Step up 1 block
+                player.x += player.vx;
+            }
+            else
+            {
+                player.vx = 0; // Blocked so player can't walk in that direction
+            }
         }
-        else if (player.vx < 0)
+        else
         {
-            int left_tile_edge = ((int)(player.x) / tile_size) * tile_size;
-            player.x = left_tile_edge + tile_size;
+            player.x += player.vx; // No collision so the player move normally
         }
-        player.vx = 0;
+    }
+    else if (player.vx < 0) // Check if the left side would collide this time
+    {
+        if (is_colliding(world, player.x + player.vx, player.y, player.w, player.h))
+        {
+            if (!is_colliding(world, player.x + player.vx, player.y - tile_size, player.w, player.h))
+            {
+                player.y -= tile_size; // Step up 1 block
+                player.x += player.vx;
+            }
+            else
+            {
+                player.vx = 0; // Blocked so the player cannot move in that direction
+            }
+        }
+        else
+        {
+            player.x += player.vx; //  No collision, move normally
+        }
     }
 }
 
