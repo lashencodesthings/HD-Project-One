@@ -2,6 +2,7 @@
 #include "../Block/Block.h"
 #include "../BiomeSystem/BiomeSystem.h"
 #include "../PerlinNoise/PerlinNoise.h"
+#include "../TerrainSnakeGenerator/TerrainSnakeGenerator.h"
 #include <iostream>
 
 /*
@@ -70,96 +71,7 @@ void World::generate_base_terrain() {
 // https://blog.jrheard.com/procedural-dungeon-generation-drunkards-walk-in-clojurescript
 
 void World::generate_secondary_fill() {
-
-    // Configuration for each snake
-    const int SPAWN_SPACING = 80; // How far apart the starting points for each cluster of veins are
-    const int SNAKES_PER_NEST = 10; // The base number of snakes that start at each spawn point
-    const int NEST_VARIANCE = 5; // Adds a bit of randomness to the count so every nest isn't identical
-    const int MIN_LIFESPAN = 300; // The shortest path a snake will take before it dies out
-    const int MAX_LIFESPAN_VAR = 500; // Extra potential length to make some veins much longer than others
-    const int MIN_RADIUS = 1; // The thinnest the brush can be
-    const int RADIUS_VAR = 3; // How much thicker the vein can randomly get
-    const int MOVE_RANGE = 5; // The wiggle room for each snake, sort of how eratic the snake is
-    const int MOVE_OFFSET = 2; // Used to center the random move so it can go left or right or up or down.
-    const float STEP_SCALE = 1.1f; // Speed multiplier, a value of 1.0 makes the snake jump and look more jagged
-    const int SURFACE_MARGIN = 10; // How deep under the grass line the snakes are allowed to start spawning
-    const int BRANCH_CHANCE = 2; // The chance out of 100 that a snake splits into two each step
-    const int MAX_BRANCHES_PER_NEST = 8; // The maximum snakes that can be made from 1 snake
-
-    for (int l = 0; l < (int)config.layers.size(); l++) {
-        for (int x_spawn = 0; x_spawn < width; x_spawn += SPAWN_SPACING) {
-            int snakes_to_spawn = SNAKES_PER_NEST + (rand() % NEST_VARIANCE); 
-            int branches_created = 0;
-            for (int s = 0; s < snakes_to_spawn; s++) {
-                float curr_x = (float)(x_spawn + (rand() % (SPAWN_SPACING / 2)) - (SPAWN_SPACING / 4));
-                int safe_x = (int)std::max(0.0f, std::min((float)width - 1, curr_x));
-                float curr_y = (float)(surface_map[safe_x] + SURFACE_MARGIN + (rand() % 100));
-                
-                int life_span = MIN_LIFESPAN + (rand() % MAX_LIFESPAN_VAR);
-                int brush_radius = MIN_RADIUS + (rand() % RADIUS_VAR);
-
-                for (int step = 0; step < life_span; step++) {
-                    curr_x += (float)((rand() % MOVE_RANGE) - MOVE_OFFSET) * STEP_SCALE;
-                    curr_y += (float)((rand() % MOVE_RANGE) - MOVE_OFFSET) * STEP_SCALE;
-
-                    // Clone the current snake if branch chance is met
-                    if (branches_created < MAX_BRANCHES_PER_NEST && (rand() % 100) < BRANCH_CHANCE) {
-                        snakes_to_spawn++; 
-                        branches_created++;
-                        // The new snake will start from this current position in the next loop
-                    }
-
-                    if (curr_x < 0 || curr_x >= width || curr_y < 0 || curr_y >= height) break;
-
-                    int ix = (int)curr_x;
-                    int iy = (int)curr_y;
-
-                    Biome& current_biome = get_biome_data().at(biome_map[ix]);
-                    const std::vector<BlockOption>* options = get_options_for_layer(current_biome, l);
-                    
-                    if (!options || options->size() <= 1) continue;
-
-                    BlockType base_type = options-> front().type;
-                    float max_w = -1.0f;
-                    for (size_t i = 0; i < options-> size(); ++i) { 
-                        const BlockOption& opt = (*options)[i];
-                        if (opt.weight > max_w) { 
-                            max_w = opt.weight; 
-                            base_type = opt.type; 
-                        } 
-                    }
-                    
-                    std::vector<BlockOption> local_palette;
-                    for (size_t i = 0; i < options->size(); ++i) { 
-                        const BlockOption& opt = (*options)[i];
-                        if (opt.type != base_type) {
-                            local_palette.push_back(opt); 
-                        }
-                    }
-
-                    if (local_palette.empty()) continue;
-
-                    for (int offsetY = -brush_radius; offsetY <= brush_radius; offsetY++) {
-                        for (int offsetX = -brush_radius; offsetX <= brush_radius; offsetX++) {
-                            int targetX = ix + offsetX;
-                            int targetY = iy + offsetY;
-
-                            if (targetX >= 0 && targetX < width && targetY >= 0 && targetY < height) {
-                                
-                                bool isBelowSurface = targetY > surface_map[targetX];
-                                bool isInsideBrushCircle = (offsetX * offsetX + offsetY * offsetY) < (brush_radius * brush_radius);
-
-                                if (isBelowSurface && isInsideBrushCircle) {
-                                    float randomValue = (float)(rand() % 100) / 100.0f;
-                                    blocks[targetX][targetY].type = pick_weighted(local_palette, randomValue);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    TerrainSnakeGenerator::generate(*this);
 }
 
 // Generates the terrain using the passes

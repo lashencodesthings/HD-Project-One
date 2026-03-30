@@ -11,7 +11,7 @@ std::map<BiomeType, Biome>& get_biome_data()
         {BiomeType::Plains, {
             // Surface
             { 
-                {Grass, 1.0f}
+                {Grass, 1.0f},
             },
 
             // Subsurface 
