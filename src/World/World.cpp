@@ -67,57 +67,74 @@ World::World(int w, int h, unsigned int s, int z, const WorldConfig& cfg)
     blocks.assign(width, std::vector<Block>(height, Block(Air)));
 }
 
-// Generate Main Procedure
+// Main generation
 void World::generate()
 {
     biome_map = generate_biome_map(width, seed);
     surface_map.resize(width);
-    
-    // Pass 1 Initial Placement
-    placement_pass();
-}
+    warp_map.resize(width, std::vector<int>(height));
+    layer_limits.resize(width);
 
-void World::placement_pass()
-{
+    #pragma omp parallel for // Independant for loops so I parallelise it so it's running on a different thread
     for (int x = 0; x < width; x++) {
         surface_map[x] = get_surface_height(x);
-        for (int y = 0; y < height; y++) { blocks[x][y] = get_block_at(x, y);  }
+
+        for (int y = 0; y < height; y++) {
+            double warp1 = noise_biome.value({ x * 0.02, y * 0.05 }) * 10.0;
+            double warp2 = noise_biome.value({ x * 0.05 + 100.0, y * 0.05 + 100.0 }) * 5.0;
+            warp_map[x][y] = std::clamp(x + (int)(warp1 + warp2), 0, width - 1);
+        }
+
+        // Precompute layer limits
+        int current_y = surface_map[x];
+        layer_limits[x].resize(config.layers.size());
+        for (size_t i = 0; i < config.layers.size(); i++) {
+            const LayerConfig& layer = config.layers[i];
+            double wiggle = noise_surface.value({ (double)x * layer.noise_scale, (double)seed + i * 100.0 }) * layer.variation;
+            current_y += layer.thickness + (int)wiggle;
+            layer_limits[x][i] = current_y;
+        }
+    }
+
+    // Place blocks using precomputed biome and layer limits
+    #pragma omp parallel for // Parallelise this loop because each loop inside is independant, it's writing to a new value each thread
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+            int warped_x = warp_map[x][y];
+            BiomeType block_type = biome_map[warped_x];
+            blocks[x][y] = get_block_at(warped_x, y, block_type, layer_limits[x]);
+        }
     }
 }
 
-// Helper Functions
-Block World::get_block_at(int x, int y)
+// Get block at a point in a specific biome and layer
+Block World::get_block_at(int x, int y, BiomeType block_type, const std::vector<int> &layer_limit)
 {
-    int surface = surface_map[x];
-    if (y < surface) return Block(Air);
+    if (y < surface_map[x]) return Block(Air);
 
-    int layer_index = get_layer_at(x, y);
-    
-    // I don't want straight lines between biomes, so I warp the whole map
-    double warp1 = noise_biome.value({ x * 0.02, y * 0.02 }) * 80.0;
-    double warp2 = noise_biome.value({ x * 0.05 + 100.0, y * 0.05 + 100.0 }) * 40.0;
+    size_t layer_index = layer_limit.size();
+    for (size_t i = 0; i < layer_limit.size(); i++) {
+        if (y < layer_limit[i]) {
+            layer_index = i;
+            break;
+        }
+    }
 
-    double warp = warp1 + warp2;
-
-    int sample_x = x + (int) warp;
-    sample_x = std::max(0, std::min(width - 1, sample_x));
-
-    BiomeType b_type = biome_map[sample_x];
-        
     return Block(
-        get_block_type_for_biome(b_type, x, y), 
-        Solid, 
-        get_wall_type_for_biome(b_type, layer_index)
+        get_block_type_for_biome(block_type, x, y),
+        Solid,
+        get_wall_type_for_biome(block_type, layer_index)
     );
 }
 
+// Helper Functions
 int World::get_layer_at(int x, int y)
 {
     int current_y = surface_map[x];
     for (size_t i = 0; i < config.layers.size(); i++) {
         const LayerConfig& layer = config.layers[i];
         double wiggle = noise_surface.value({ (double)x * layer.noise_scale, (double)seed + (i * 100.0) }) * layer.variation;
-        current_y += (layer.thickness + (int)wiggle);
+        current_y += (layer.thickness + (int) wiggle);
         if (y < current_y) return (int)i;
     }
     return (int) config.layers.size();
@@ -150,34 +167,13 @@ WallType World::get_wall_type_for_biome(BiomeType type, int layer_index)
     }
 }
 
-// Calculation Functions
-BiomeType World::get_nearest_neighbour(int x, int& out_dist) {
-    int search_radius = 50;
-
-    for (int r = 1; r < search_radius; r++) {
-        for (int dx = -r; dx <= r; dx++) {
-            int nx = x + dx;
-            if (nx < 0 || nx >= width) continue;
-
-            if (biome_map[nx] != biome_map[x]) {
-                out_dist = r;
-                return biome_map[nx];
-            }
-        }
-    }
-
-    out_dist = search_radius;
-    return biome_map[x];
-}
-
 int World::get_surface_height(int x)
 {
     double amp = height * config.terrain.amplitude_ratio;
     double big = noise_surface.value({ (double) x * config.terrain.big_scale, (double) seed });
     double small = noise_surface.value({ (double) x * config.terrain.small_scale, (double) seed * 2.0 });
 
-    double height_value = surface_base + (big * amp) + (small * amp * config.terrain.small_weight);
-    return (int) height_value;
+    return (int)(surface_base + (big * amp) + (small * amp * config.terrain.small_weight));
 }
 
 void World::draw()
@@ -189,13 +185,9 @@ void World::draw()
             int by = y * BLOCK_SIZE * zoom;
             int size = BLOCK_SIZE * zoom;
 
-            if (block.type != Air) {
-                fill_rectangle(block_colors[block.type], bx, by, size, size);
-            } else if (block.wall != AirWall) {
-                fill_rectangle(wall_colors[block.wall], bx, by, size, size);
-            } else {
-                fill_rectangle(block_colors[Air], bx, by, size, size);
-            }
+            if (block.type != Air) { fill_rectangle(block_colors[block.type], bx, by, size, size);}
+            else if (block.wall != AirWall) { fill_rectangle(wall_colors[block.wall], bx, by, size, size); }
+            else { fill_rectangle(block_colors[Air], bx, by, size, size); }
         }
     }
 }
