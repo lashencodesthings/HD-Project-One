@@ -30,8 +30,9 @@ int main()
 
     Player player = {
         spawn.x,
-        spawn.y,
-        0, 0
+        spawn.y - 10,
+        0, 0,
+        16, 16
     };
 
     Camera cam = {player.x, player.y};
