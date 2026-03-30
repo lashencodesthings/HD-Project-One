@@ -124,7 +124,7 @@ void World::draw(float cam_x, float cam_y)
 int World::get_layer_index_at(int x, int y) {
     if (y < surface_map[x]) return -1;
     const std::vector<int>& limits = layer_limits[x];
-    for (int i = 0; i < (int)limits.size(); i++) {
+    for (int i = 0; i < (int) limits.size(); i++) {
         if (y < limits[i]) return i;
     }
     return (int) config.layers.size(); // If no layer can be found then return last layer
@@ -145,7 +145,7 @@ Block World::get_block_at(int x, int y, BiomeType biome_type, const std::vector<
     const std::vector<BlockOption>* options = get_options_for_layer(biome, layer_idx);
     BlockType type = Air;
     if (options && !options -> empty()) {
-        type = options->front().type;
+        type = options -> front().type;
     }
     return Block(type, Solid, get_wall_type_for_biome(biome_type, layer_idx));
 }

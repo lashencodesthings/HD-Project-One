@@ -3,30 +3,31 @@
 #include "Generation/CellularAutomata/CellularAutomata.h"
 #include "Entities/Player/Player.h"
 #include "Entities/Camera/Camera.h"
+#include <memory>
 
 const int WORLD_WIDTH = 6400;
 const int WORLD_HEIGHT = 1800;
 
-World generate_world()
+std::unique_ptr<World> generate_world()
 {
     WorldConfig cfg = load_world_config("world.json");
 
-    World world(WORLD_WIDTH, WORLD_HEIGHT, 9878685, 1, cfg);
-    world.generate();
+    std::unique_ptr<World> new_world = std::make_unique<World>(WORLD_WIDTH, WORLD_HEIGHT, 9878685, 1, cfg);
+    new_world -> generate();
 
-    CellularAutomata ca(world);
+    CellularAutomata ca(*new_world);
     ca.run();
 
-    return world;
+    return new_world;
 }
 
 int main()
 {
     open_window("Game", 1920, 1080);
 
-    World world = generate_world();
+    std::unique_ptr<World> world = generate_world();
 
-    point_2d spawn = world.get_random_spawn_point();
+    point_2d spawn = world -> get_random_spawn_point();
 
     Player player = {
         spawn.x,
@@ -41,15 +42,23 @@ int main()
     {
         process_events();
 
-        update_player(player, world, cam);
+        update_player(player, *world, cam); 
         update_camera(cam, player.x, player.y);
 
         clear_screen(COLOR_LIGHT_SKY_BLUE);
 
-        world.draw(cam.x, cam.y);
+        world -> draw(cam.x, cam.y);
         draw_player(player, cam.x, cam.y);
 
         refresh_screen(60);
+
+        if(key_typed(R_KEY))
+        {
+            world = generate_world();
+            point_2d spawn = world -> get_random_spawn_point();
+            player.x = spawn.x;
+            player.y = spawn.y - 10;
+        }
     }
 
     return 0;

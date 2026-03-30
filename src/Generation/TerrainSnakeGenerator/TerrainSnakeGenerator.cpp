@@ -2,20 +2,6 @@
 #include "../World/World.h"
 
 namespace TerrainSnakeGenerator {
-    const int VEIN_SPACING = 20;
-    const int VEINS_PER_CLUSTER = 15;
-    const int VEIN_COUNT_VARIATION = 8;
-    const int MIN_VEIN_LENGTH = 100;
-    const int VEIN_LENGTH_VARIATION = 300;
-    const int MIN_BRUSH_RADIUS = 1;
-    const int BRUSH_RADIUS_VARIATION = 2;
-    const int MOVE_RANGE = 7;
-    const int MOVE_OFFSET = 3;
-    const float STEP_SCALE = 1.1f;
-    const int SURFACE_OFFSET = 20;
-    const int BRANCH_PROBABILITY = 10;
-    const int MAX_BRANCHES = 8;
-
     static std::vector<BlockOption> build_secondary_block_palette(const std::vector<BlockOption>& layer_options);
     static BlockType select_weighted_block(const std::vector<BlockOption>& palette);
     static void apply_brush(World& world, int center_x, int center_y, int radius, const std::vector<BlockOption>& palette, BiomeType origin_biome);
@@ -32,19 +18,19 @@ namespace TerrainSnakeGenerator {
     );
 
     void generate(World& world) {
-        for (int spawn_x = 0; spawn_x < world.width; spawn_x += VEIN_SPACING) {
+        for (int spawn_x = 0; spawn_x < world.width; spawn_x += world.config.terrain_snakes.VEIN_SPACING) {
 
-            int active_vein_count = VEINS_PER_CLUSTER + (rand() % VEIN_COUNT_VARIATION);
+            int active_vein_count = world.config.terrain_snakes.VEINS_PER_CLUSTER + (rand() % world.config.terrain_snakes.VEIN_COUNT_VARIATION);
             int branch_count = 0;
 
             for (int i = 0; i < active_vein_count; i++) {
 
-                float start_x = (float)(spawn_x + (rand() % (VEIN_SPACING / 2)) - (VEIN_SPACING / 4));
-                int clamped_x = (int)std::max(0.0f, std::min((float)world.width - 1, start_x));
-                float start_y = (float)(world.surface_map[clamped_x] + SURFACE_OFFSET + (rand() % 100));
+                float start_x = (float)(spawn_x + (rand() % (world.config.terrain_snakes.VEIN_SPACING / 2)) - (world.config.terrain_snakes.VEIN_SPACING / 4));
+                int clamped_x = (int)std::max(0.0f, std::min((float) world.width - 1, start_x));
+                float start_y = (float)(world.surface_map[clamped_x] + world.config.terrain_snakes.SURFACE_OFFSET + (rand() % 100));
 
-                int lifespan = MIN_VEIN_LENGTH + (rand() % VEIN_LENGTH_VARIATION);
-                int radius = MIN_BRUSH_RADIUS + (rand() % BRUSH_RADIUS_VARIATION);
+                int lifespan = world.config.terrain_snakes.MIN_VEIN_LENGTH + (rand() % world.config.terrain_snakes.VEIN_LENGTH_VARIATION);
+                int radius = world.config.terrain_snakes.MIN_BRUSH_RADIUS + (rand() % world.config.terrain_snakes.BRUSH_RADIUS_VARIATION);
 
                 int origin_layer = world.get_layer_index_at(clamped_x, (int)start_y);
                 BiomeType origin_biome = world.biome_map[clamped_x];
@@ -149,10 +135,10 @@ namespace TerrainSnakeGenerator {
     static void simulate_vein(World& world, float pos_x, float pos_y, int lifespan, int radius, const std::vector<BlockOption>& palette, BiomeType origin_biome, int& active_vein_count, int& branch_count) {
         for (int step = 0; step < lifespan; step++) {
 
-            pos_x += (float)((rand() % MOVE_RANGE) - MOVE_OFFSET) * STEP_SCALE;
-            pos_y += (float)((rand() % MOVE_RANGE) - MOVE_OFFSET) * STEP_SCALE;
+            pos_x += (float)((rand() % world.config.terrain_snakes.MOVE_RANGE) - world.config.terrain_snakes.MOVE_OFFSET) * world.config.terrain_snakes.STEP_SCALE * 0.25f;
+            pos_y += (float)((rand() % world.config.terrain_snakes.MOVE_RANGE) - world.config.terrain_snakes.MOVE_OFFSET) * world.config.terrain_snakes.STEP_SCALE * 2.0f;
 
-            if (branch_count < MAX_BRANCHES && (rand() % 100) < BRANCH_PROBABILITY) {
+            if (branch_count < world.config.terrain_snakes.MAX_BRANCHES && (rand() % 100) < world.config.terrain_snakes.BRANCH_PROBABILITY) {
                 active_vein_count++;
                 branch_count++;
             }

@@ -20,8 +20,8 @@ class CellularAutomata {
         std::mt19937 rng;
 
         const int WALL_THRESHOLD = 4;
-        const int NOISE_DENSITY = 40;
-        const int ITERATIONS = 4;
+        const int NOISE_DENSITY = 50;
+        const int ITERATIONS = 8;
 
         std::uniform_int_distribution<int> percent_dist{0, 99};
         int count_neighbours(int x, int y);

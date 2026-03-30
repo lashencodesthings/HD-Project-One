@@ -11,10 +11,25 @@
     "underground_offset": 1000
   },
   "layers": [
-    { "thickness": 1, "variation": 0, "noise_scale": 0.05 },
-    { "thickness": 249, "variation": 1, "noise_scale": 0.05 },
-    { "thickness": 350, "variation": 2, "noise_scale": 0.05 },
-    { "thickness": 800, "variation": 3, "noise_scale": 0.05 },
-    { "thickness": 400, "variation": 3, "noise_scale": 0.05 }
-  ]
+    { "layer": "surface", "thickness": 1, "variation": 0, "noise_scale": 0.05 },
+    { "layer": "subsurface", "thickness": 249, "variation": 1, "noise_scale": 0.05 },
+    { "layer": "underground", "thickness": 350, "variation": 2, "noise_scale": 0.05 },
+    { "layer": "cavern", "thickness": 800, "variation": 3, "noise_scale": 0.05 },
+    { "layer": "underworld", "thickness": 400, "variation": 3, "noise_scale": 0.05 }
+  ],
+  "terrain_snakes": {
+    "VEIN_SPACING": 20,
+    "VEINS_PER_CLUSTER": 15,
+    "VEIN_COUNT_VARIATION": 8,
+    "MIN_VEIN_LENGTH": 100,
+    "VEIN_LENGTH_VARIATION": 300,
+    "MIN_BRUSH_RADIUS": 4,
+    "BRUSH_RADIUS_VARIATION": 5,
+    "MOVE_RANGE": 7,
+    "MOVE_OFFSET": 3,
+    "STEP_SCALE": 1.1,
+    "SURFACE_OFFSET": 20,
+    "BRANCH_PROBABILITY": 10,
+    "MAX_BRANCHES": 8
+  }
 }
