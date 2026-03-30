@@ -121,10 +121,18 @@ WallType World::get_wall_type_for_biome(BiomeType type, int layer_index) {
     return biome.underworld_wall;
 }
 
-Block World::get_block_at(int x, int y, BiomeType block_type, const std::vector<int>& layer_limit) {
+Block World::get_block_at(int x, int y, BiomeType biome_type, const std::vector<int>& layer_limit) {
     if (x < 0 || x >= width || y < 0 || y >= height) return Block(Air);
-    return blocks[x][y];
+    int layer_idx = get_layer_index_at(x, y); 
+    Biome& biome = get_biome_data().at(biome_type);
+    const std::vector<BlockOption>* options = get_options_for_layer(biome, layer_idx);
+    BlockType type = Air;
+    if (options && !options -> empty()) {
+        type = options->front().type;
+    }
+    return Block(type, Solid, get_wall_type_for_biome(biome_type, layer_idx));
 }
+
 
 int World::get_surface_height(int x) {
     double amp = (double)height * config.terrain.amplitude_ratio;

@@ -58,10 +58,13 @@ void CellularAutomata::apply() {
     for (int x = 0; x < width; ++x) {
         for (int y = world.surface_map[x] + 2; y < height; ++y) {
             int block_index = x + y * width;
+            
             if (current[block_index]) {
-                BiomeType block_type = world.biome_map[x];
-                const std::vector<int>& layer_limits = world.layer_limits[x];
-                world.blocks[x][y] = world.get_block_at(x, y, block_type, layer_limits);
+                if (world.blocks[x][y].type == BlockType::Air) {
+                    BiomeType block_type = world.biome_map[x];
+                    const std::vector<int>& layer_limits = world.layer_limits[x];
+                    world.blocks[x][y] = world.get_block_at(x, y, block_type, layer_limits);
+                }
             } else {
                 world.blocks[x][y] = Block(BlockType::Air, Solid, world.blocks[x][y].wall);
             }
