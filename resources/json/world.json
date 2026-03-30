@@ -2,9 +2,9 @@
   "terrain": {
     "amplitude_ratio": 0.25,
     "base_height_ratio": 0.2,
-    "big_scale": 0.02,
-    "small_scale": 0.015,
-    "small_weight": 0.3
+    "big_scale": 0.05,
+    "small_scale": 0.025,
+    "small_weight": 0.5
   },
   "noise": {
     "surface_offset": 1000,
