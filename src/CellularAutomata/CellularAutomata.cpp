@@ -59,9 +59,9 @@ void CellularAutomata::apply() {
         for (int y = world.surface_map[x] + 2; y < height; ++y) {
             int block_index = x + y * width;
             if (current[block_index]) {
-                BiomeType b_type = world.biome_map[x];
+                BiomeType block_type = world.biome_map[x];
                 const std::vector<int>& layer_limits = world.layer_limits[x];
-                world.blocks[x][y] = world.get_block_at(x, y, b_type, layer_limits);
+                world.blocks[x][y] = world.get_block_at(x, y, block_type, layer_limits);
             } else {
                 world.blocks[x][y] = Block(BlockType::Air, Solid, world.blocks[x][y].wall);
             }
@@ -89,9 +89,9 @@ void CellularAutomata::smooth() {
             }
 
             else if (!is_solid && neighbours >= 3) {
-                BiomeType b_type = world.biome_map[x];
+                BiomeType block_type = world.biome_map[x];
                 const std::vector<int>& layer_limits = world.layer_limits[x];
-                world.blocks[x][y] = world.get_block_at(x, y, b_type, layer_limits);
+                world.blocks[x][y] = world.get_block_at(x, y, block_type, layer_limits);
             }
         }
     }

@@ -42,10 +42,9 @@ class World
 
         int get_layer_at(int x, int y);
         
-        BlockType get_block_type_for_biome(BiomeType type, int x, int y);
+        BlockType get_block_type_for_biome(BiomeType type, int layer_index);
         WallType get_wall_type_for_biome(BiomeType type, int layer_index);
         BiomeType get_nearest_neighbour(int x, int& out_dist);
         
         std::vector<std::vector<int>> layer_limits;
-        std::vector<std::vector<int>> warp_map;
 };

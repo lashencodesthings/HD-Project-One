@@ -72,25 +72,18 @@ void World::generate()
 {
     biome_map = generate_biome_map(width, seed);
     surface_map.resize(width);
-    warp_map.resize(width, std::vector<int>(height));
     layer_limits.resize(width);
 
     #pragma omp parallel for // Independant for loops so I parallelise it so it's running on a different thread
     for (int x = 0; x < width; x++) {
         surface_map[x] = get_surface_height(x);
 
-        for (int y = 0; y < height; y++) {
-            double warp1 = noise_biome.value({ x * 0.02, y * 0.05 }) * 10.0;
-            double warp2 = noise_biome.value({ x * 0.05 + 100.0, y * 0.05 + 100.0 }) * 5.0;
-            warp_map[x][y] = std::clamp(x + (int)(warp1 + warp2), 0, width - 1);
-        }
-
         // Precompute layer limits
         int current_y = surface_map[x];
         layer_limits[x].resize(config.layers.size());
         for (size_t i = 0; i < config.layers.size(); i++) {
             const LayerConfig& layer = config.layers[i];
-            double wiggle = noise_surface.value({ (double)x * layer.noise_scale, (double)seed + i * 100.0 }) * layer.variation;
+            double wiggle = noise_surface.value({ (double) x * layer.noise_scale, (double) seed + i * 100.0 }) * layer.variation;
             current_y += layer.thickness + (int)wiggle;
             layer_limits[x][i] = current_y;
         }
@@ -100,9 +93,8 @@ void World::generate()
     #pragma omp parallel for // Parallelise this loop because each loop inside is independant, it's writing to a new value each thread
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
-            int warped_x = warp_map[x][y];
-            BiomeType block_type = biome_map[warped_x];
-            blocks[x][y] = get_block_at(warped_x, y, block_type, layer_limits[x]);
+            BiomeType block_type = biome_map[x];
+            blocks[x][y] = get_block_at(x, y, block_type, layer_limits[x]);
         }
     }
 }
@@ -111,17 +103,16 @@ void World::generate()
 Block World::get_block_at(int x, int y, BiomeType block_type, const std::vector<int> &layer_limit)
 {
     if (y < surface_map[x]) return Block(Air);
-
-    size_t layer_index = layer_limit.size();
+    int layer_index = (int)layer_limit.size();
     for (size_t i = 0; i < layer_limit.size(); i++) {
         if (y < layer_limit[i]) {
-            layer_index = i;
+            layer_index = (int)i;
             break;
         }
     }
 
     return Block(
-        get_block_type_for_biome(block_type, x, y),
+        get_block_type_for_biome(block_type, layer_index),
         Solid,
         get_wall_type_for_biome(block_type, layer_index)
     );
@@ -140,9 +131,8 @@ int World::get_layer_at(int x, int y)
     return (int) config.layers.size();
 }
 
-BlockType World::get_block_type_for_biome(BiomeType type, int x, int y)
+BlockType World::get_block_type_for_biome(BiomeType type, int layer_index)
 {
-    int layer_index = get_layer_at(x, y);
     Biome& biome = get_biome_data().at(type);
 
     switch (layer_index) {
