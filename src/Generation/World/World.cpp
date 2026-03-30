@@ -84,19 +84,28 @@ void World::generate() {
     generate_secondary_fill();
 }
 
-void World::draw() {
-    for (int x = 0; x < width; x++) {
-        for (int y = 0; y < height; y++) {
+void World::draw(float cam_x, float cam_y)
+{
+    for (int x = 0; x < width; x++)
+    {
+        for (int y = 0; y < height; y++)
+        {
             const Block& block = blocks[x][y];
-            int bx = x * BLOCK_SIZE * zoom;
-            int by = y * BLOCK_SIZE * zoom;
+
+            int bx = x * BLOCK_SIZE * zoom - cam_x;
+            int by = y * BLOCK_SIZE * zoom - cam_y;
             int size = BLOCK_SIZE * zoom;
 
-            if (block.type != Air) {
+            if (block.type != Air)
+            {
                 fill_rectangle(block_colors[block.type], bx, by, size, size);
-            } else if (block.wall != AirWall) {
+            }
+            else if (block.wall != AirWall)
+            {
                 fill_rectangle(wall_colors[block.wall], bx, by, size, size);
-            } else {
+            }
+            else
+            {
                 fill_rectangle(block_colors[Air], bx, by, size, size);
             }
         }

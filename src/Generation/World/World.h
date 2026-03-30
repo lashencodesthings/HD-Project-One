@@ -36,7 +36,7 @@ class World
 
         int get_surface_height(int x);
         void generate();
-        void draw();
+        void draw(float cam_x, float cam_y);;
 
         void placement_pass();
 
