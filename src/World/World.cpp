@@ -3,6 +3,8 @@
 #include "../BiomeSystem/BiomeSystem.h"
 #include "../PerlinNoise/PerlinNoise.h"
 #include <iostream>
+#include "../../libraries/voronoinoise.hpp"
+#include "../VoronoiNoise/VoronoiNoise.h"
 
 /*
     Author: Lashen Dharmadasa
@@ -12,51 +14,6 @@
         It has a lot of configuration variables, for my experimentation during this project.
         It's crude in that it completes the first and second pass for biomes and simple generation.
         Tunnelling and other features come later on.
-
-    Parameters:
-        1. Terrain Shape
-            - amplitude_ratio
-                Controls how tall terrain is are relative to the world height.
-
-            - base_height_ratio
-                The baseline surface height of the terrain.
-
-            - big_scale
-                Frequency of large terrain hills.
-                A lower value provides wide and smooth hills.
-                A Higher value produces rapid elevation changes in the terrain.
-
-            - small_scale
-                Frequency of fine detail noise like thin hills.
-
-            - small_weight
-                Influence of fine detail noise.
-                A higher value provides rougher terrain.
-
-        2. Terrain Noise Config
-            I added offsets applied to the world seed to generate independent noise fields for each layer, as I felt having the same shape was not appealing.
-
-            - surface_offset
-                Used for terrain height offsets.
-
-            - underground_offset
-                Used for underground layer variation
-
-        3. Seperate layer config
-            - thickness
-                Base thickness of the layer.
-
-            - variation
-                Amount of noise-based variation in thickness.
-
-            - noise_scale
-                Controls how frequently thickness of the layer changes across the world.
-
-            - block
-                Block used for this layer.
-
-            - wall
-                Background wall for this layer.
 */
 
 // World Constructor
@@ -67,117 +24,180 @@ World::World(int w, int h, unsigned int s, int z, const WorldConfig& cfg)
     blocks.assign(width, std::vector<Block>(height, Block(Air)));
 }
 
-// Main generation
-void World::generate()
-{
-    biome_map = generate_biome_map(width, seed);
-    surface_map.resize(width);
-    layer_limits.resize(width);
-
-    #pragma omp parallel for // Independant for loops so I parallelise it so it's running on a different thread
+// Pass 1 of the generation
+// Fills the world with the majority block for every layer to createe the baseline
+void World::generate_base_terrain() {
+    #pragma omp parallel for // To run this in a seperate thread for speed
     for (int x = 0; x < width; x++) {
         surface_map[x] = get_surface_height(x);
-
-        // Precompute layer limits
+        
+        // Compute layer limits for this column
         int current_y = surface_map[x];
         layer_limits[x].resize(config.layers.size());
         for (size_t i = 0; i < config.layers.size(); i++) {
             const LayerConfig& layer = config.layers[i];
-            double wiggle = noise_surface.value({ (double) x * layer.noise_scale, (double) seed + i * 100.0 }) * layer.variation;
+            double wiggle = noise_surface.value({ (double)x * layer.noise_scale, (double)seed + (double)i * 100.0 }) * layer.variation;
             current_y += layer.thickness + (int)wiggle;
             layer_limits[x][i] = current_y;
         }
-    }
 
-    // Place blocks using precomputed biome and layer limits
-    #pragma omp parallel for // Parallelise this loop because each loop inside is independant, it's writing to a new value each thread
-    for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
-            BiomeType block_type = biome_map[x];
-            blocks[x][y] = get_block_at(x, y, block_type, layer_limits[x]);
+            if (y < surface_map[x]) {
+                blocks[x][y] = Block(Air);
+                continue;
+            }
+
+            int layer_idx = get_layer_index_at(x, y); 
+            Biome& biome = get_biome_data().at(biome_map[x]);
+            const std::vector<BlockOption>* options = get_options_for_layer(biome, layer_idx);
+
+            // Identify the base block, which is the block with the highest weight
+            BlockType base_type = options -> front().type;
+            float max_w = -1.0f;
+            for (size_t i = 0; i < options->size(); ++i) {
+                const BlockOption& opt = (*options)[i];
+                if (opt.weight > max_w) {
+                    max_w = opt.weight;
+                    base_type = opt.type;
+                }
+            }
+
+            blocks[x][y] = Block(base_type, Solid, get_wall_type_for_biome(biome_map[x], layer_idx));
         }
     }
 }
 
-// Get block at a point in a specific biome and layer
-Block World::get_block_at(int x, int y, BiomeType block_type, const std::vector<int> &layer_limit)
-{
-    if (y < surface_map[x]) return Block(Air);
-    int layer_index = (int)layer_limit.size();
-    for (size_t i = 0; i < layer_limit.size(); i++) {
-        if (y < layer_limit[i]) {
-            layer_index = (int)i;
-            break;
+// Pass 2 Voronoi detail fill for generation
+// Stays within the bounds of a layer and places "blobs" of the remaining blocks assigned for the current biome
+void World::generate_secondary_fill() {
+    using namespace cinekine::voronoi;
+
+    for (int l = 0; l < (int)config.layers.size(); l++) {
+        Sites sites;
+        // Adjust density
+        // A higher numberi on the denominator will mean fewer, larger blobs
+        int site_count = (width * height) / 1000; 
+        for(int i = 0; i < site_count; i++) {
+            sites.push_back(Vertex((float)(rand() % width), (float)(rand() % height)));
+        }
+
+        Graph graph = build(std::move(sites), (float)width, (float)height);
+        const std::vector<Site>& final_sites = graph.sites();
+
+        #pragma omp parallel for
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                // Ensure only the current target layer is affected
+                if (get_layer_index_at(x, y) == l) {
+                    int site_idx = find_closest_site(x, y, final_sites);
+                    const Site& site = final_sites[site_idx];
+
+                    float dx = (float)x - site.x;
+                    float dy = (float)y - site.y;
+                    
+                    // Assign the current x and y to a blob
+                    // Radius threshold for the blob (150 is radius squared)
+                    if ((dx*dx + dy*dy) < 150.0f) { 
+                        Biome& biome = get_biome_data().at(biome_map[x]);
+                        const std::vector<BlockOption>* options = get_options_for_layer(biome, l);
+
+                        // Find the base block to ensure it's not picked it for a blob
+                        float max_w = -1.0f;
+                        BlockType base_type = options -> front().type;
+                        for (size_t i = 0; i < options-> size(); ++i) {
+                            if ((*options)[i].weight > max_w) {
+                                max_w = (*options)[i].weight;
+                                base_type = (*options)[i].type;
+                            }
+                        }
+
+                        // Build a temporary list of blocks that aren't placed in the base
+                        std::vector<BlockOption> secondary_options;
+                        for (size_t i = 0; i < options->size(); ++i) {
+                            if ((*options)[i].type != base_type) {
+                                secondary_options.push_back((*options)[i]);
+                            }
+                        }
+
+                        if (!secondary_options.empty()) {
+                            // Use perlin noise for the variety inside the blob
+                            double nv = noise_surface.value({ (double) x * 0.02, (double) y * 0.02 });
+                            float r = (float)((nv + 1.0) / 2.0);
+                            blocks[x][y].type = pick_weighted(secondary_options, r);
+                        }
+                    }
+                }
+            }
         }
     }
-
-    return Block(
-        get_block_type_for_biome(block_type, layer_index),
-        Solid,
-        get_wall_type_for_biome(block_type, layer_index)
-    );
 }
 
-// Helper Functions
-int World::get_layer_at(int x, int y)
-{
-    int current_y = surface_map[x];
-    for (size_t i = 0; i < config.layers.size(); i++) {
-        const LayerConfig& layer = config.layers[i];
-        double wiggle = noise_surface.value({ (double)x * layer.noise_scale, (double)seed + (i * 100.0) }) * layer.variation;
-        current_y += (layer.thickness + (int) wiggle);
-        if (y < current_y) return (int)i;
-    }
-    return (int) config.layers.size();
+// Generates the terrain using the passes
+void World::generate() {
+    biome_map = generate_biome_map(width, seed);
+    surface_map.resize(width);
+    layer_limits.resize(width);
+
+    generate_base_terrain();
+    generate_secondary_fill();
 }
 
-BlockType World::get_block_type_for_biome(BiomeType type, int layer_index)
-{
-    Biome& biome = get_biome_data().at(type);
-
-    switch (layer_index) {
-        case 0: return biome.surface_block;
-        case 1: return biome.subsurface_block;
-        case 2: return biome.underground_block;
-        case 3: return biome.cavern_block;
-        default: return biome.underworld_block;
-    }
-}
-
-WallType World::get_wall_type_for_biome(BiomeType type, int layer_index)
-{
-    Biome& biome = get_biome_data().at(type);
-
-    switch (layer_index) {
-        case 0: return AirWall;
-        case 1: return biome.underground_wall;
-        case 2: return biome.underground_wall;
-        case 3: return biome.cavern_wall;
-        default: return biome.underworld_wall;
-    }
-}
-
-int World::get_surface_height(int x)
-{
-    double amp = height * config.terrain.amplitude_ratio;
-    double big = noise_surface.value({ (double) x * config.terrain.big_scale, (double) seed });
-    double small = noise_surface.value({ (double) x * config.terrain.small_scale, (double) seed * 2.0 });
-
-    return (int)(surface_base + (big * amp) + (small * amp * config.terrain.small_weight));
-}
-
-void World::draw()
-{
+void World::draw() {
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
-            const Block &block = blocks[x][y];
+            const Block& block = blocks[x][y];
             int bx = x * BLOCK_SIZE * zoom;
             int by = y * BLOCK_SIZE * zoom;
             int size = BLOCK_SIZE * zoom;
 
-            if (block.type != Air) { fill_rectangle(block_colors[block.type], bx, by, size, size);}
-            else if (block.wall != AirWall) { fill_rectangle(wall_colors[block.wall], bx, by, size, size); }
-            else { fill_rectangle(block_colors[Air], bx, by, size, size); }
+            if (block.type != Air) {
+                fill_rectangle(block_colors[block.type], bx, by, size, size);
+            } else if (block.wall != AirWall) {
+                fill_rectangle(wall_colors[block.wall], bx, by, size, size);
+            } else {
+                fill_rectangle(block_colors[Air], bx, by, size, size);
+            }
         }
+    }
+}
+
+// Finds layer at a specific position
+int World::get_layer_index_at(int x, int y) {
+    if (y < surface_map[x]) return -1;
+    const std::vector<int>& limits = layer_limits[x];
+    for (int i = 0; i < (int)limits.size(); i++) {
+        if (y < limits[i]) return i;
+    }
+    return (int) config.layers.size(); // If no layer can be found then return last layer
+}
+
+WallType World::get_wall_type_for_biome(BiomeType type, int layer_index) {
+    Biome& biome = get_biome_data().at(type);
+    if (layer_index == 0) return AirWall;
+    if (layer_index <= 2) return biome.underground_wall;
+    if (layer_index == 3) return biome.cavern_wall;
+    return biome.underworld_wall;
+}
+
+Block World::get_block_at(int x, int y, BiomeType block_type, const std::vector<int>& layer_limit) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return Block(Air);
+    return blocks[x][y];
+}
+
+int World::get_surface_height(int x) {
+    double amp = (double)height * config.terrain.amplitude_ratio;
+    double big = noise_surface.value({ (double)x * config.terrain.big_scale, (double)seed });
+    double small = noise_surface.value({ (double)x * config.terrain.small_scale, (double)seed * 2.0 });
+
+    return (int)((double)surface_base + (big * amp) + (small * amp * config.terrain.small_weight));
+}
+
+std::vector<BlockOption>* World::get_options_for_layer(Biome& biome, int layer_index) {
+    switch (layer_index) {
+        case 0:  return &biome.surface;
+        case 1:  return &biome.subsurface;
+        case 2:  return &biome.underground;
+        case 3:  return &biome.cavern;
+        default: return &biome.underworld;
     }
 }

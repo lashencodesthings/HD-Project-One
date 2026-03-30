@@ -42,9 +42,15 @@ class World
 
         int get_layer_at(int x, int y);
         
-        BlockType get_block_type_for_biome(BiomeType type, int layer_index);
         WallType get_wall_type_for_biome(BiomeType type, int layer_index);
         BiomeType get_nearest_neighbour(int x, int& out_dist);
+
+        void generate_voronoi_layer(int layer_index, const std::vector<BlockOption>& options);
+
+        void generate_base_terrain();
+        void generate_secondary_fill();
+        int get_layer_index_at(int x, int y);
         
+        std::vector<BlockOption>* get_options_for_layer(Biome& biome, int layer_index);
         std::vector<std::vector<int>> layer_limits;
 };

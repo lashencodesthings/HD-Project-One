@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include "../Block/Block.h"
+#include "../BlockOption/BlockOption.h"
 
 enum class BiomeType {
     Plains = 0,
@@ -11,11 +12,11 @@ enum class BiomeType {
 };
 
 struct Biome {
-    BlockType surface_block;
-    BlockType subsurface_block;
-    BlockType underground_block;
-    BlockType cavern_block;
-    BlockType underworld_block;
+    std::vector<BlockOption> surface;
+    std::vector<BlockOption> subsurface;
+    std::vector<BlockOption> underground;
+    std::vector<BlockOption> cavern;
+    std::vector<BlockOption> underworld;
 
     WallType underground_wall;
     WallType cavern_wall;
