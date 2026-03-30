@@ -2,20 +2,19 @@
 #include "../World/World.h"
 
 namespace TerrainSnakeGenerator {
-    
-    const int VEIN_SPACING = 10;
-    const int VEINS_PER_CLUSTER = 10;
+    const int VEIN_SPACING = 100;
+    const int VEINS_PER_CLUSTER = 5;
     const int VEIN_COUNT_VARIATION = 5;
-    const int MIN_VEIN_LENGTH = 100;
-    const int VEIN_LENGTH_VARIATION = 300;
+    const int MIN_VEIN_LENGTH = 200;
+    const int VEIN_LENGTH_VARIATION = 400;
     const int MIN_BRUSH_RADIUS = 1;
-    const int BRUSH_RADIUS_VARIATION = 2;
-    const int MOVE_RANGE = 5;
-    const int MOVE_OFFSET = 2;
-    const float STEP_SCALE = 1.1f;
+    const int BRUSH_RADIUS_VARIATION = 4;
+    const int MOVE_RANGE = 7;
+    const int MOVE_OFFSET = 3;
+    const float STEP_SCALE = 1.8f;
     const int SURFACE_OFFSET = 0;
-    const int BRANCH_PROBABILITY = 2;
-    const int MAX_BRANCHES = 4;
+    const int BRANCH_PROBABILITY = 45;
+    const int MAX_BRANCHES = 8;
 
     static std::vector<BlockOption> build_secondary_block_palette(const std::vector<BlockOption>& layer_options);
     static BlockType select_weighted_block(const std::vector<BlockOption>& palette);
