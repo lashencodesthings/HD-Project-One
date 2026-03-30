@@ -1,6 +1,6 @@
 #include "splashkit.h"
-#include "World/World.h"
-#include "CellularAutomata/CellularAutomata.h"
+#include "Generation/World/World.h"
+#include "Generation/CellularAutomata/CellularAutomata.h"
 
 World *world = nullptr;
 CellularAutomata *ca = nullptr;

@@ -1,6 +1,6 @@
 #pragma once
 #include "splashkit.h"
-#include "../../libraries/perlinnoise.hpp"
+#include "../../../libraries/perlinnoise.hpp"
 
 class Noise {
     public:
