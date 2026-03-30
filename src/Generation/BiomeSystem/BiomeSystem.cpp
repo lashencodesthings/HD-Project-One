@@ -50,8 +50,7 @@ std::map<BiomeType, Biome>& get_biome_data()
 
             // Subsurface
             {
-                {Sand, 0.95f},
-                {Sandstone, 0.05f},
+                {Sand, 1.0f}
             },
 
             // Underground

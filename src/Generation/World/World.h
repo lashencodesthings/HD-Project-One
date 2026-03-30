@@ -1,4 +1,5 @@
 #pragma once
+
 #include "splashkit.h"
 
 #include "../BiomeSystem/BiomeSystem.h"
@@ -10,46 +11,53 @@
 
 class World
 {
-    public:
-        int width, height;
-        unsigned int seed;
-        int zoom;
-        const int BLOCK_SIZE = 16;
+public:
+    // Core World Data
+    int width, height;
+    unsigned int seed;
+    int zoom;
 
-        std::vector<std::vector<Block>> blocks;
+    const int BLOCK_SIZE = 16;
 
-        WorldConfig config;
-        
-        Noise noise_surface;
-        Noise noise_biome;
+    std::vector<std::vector<Block>> blocks;
+    std::vector<int> surface_map;
+    std::vector<std::vector<int>> layer_limits;
+    std::vector<BiomeType> biome_map;
 
-        int surface_base;
+    WorldConfig config;
 
-        std::vector<BiomeType> biome_map;
+    // Noise Generators
+    Noise noise_surface;
+    Noise noise_biome;
 
-        Block get_block_at(int x, int y, BiomeType b_type, const std::vector<int>& layer_limit);
+    // Terrain Base
+    int surface_base;
 
-        std::vector<int> surface_map;
+    // Constructor
+    World(int w, int h, unsigned int s, int z, const WorldConfig& cfg);
 
-        World(int w, int h, unsigned int s, int z, const WorldConfig& cfg);
+    // Generation
+    void generate();
+    void generate_base_terrain();
+    void generate_secondary_fill();
+    void placement_pass();
 
-        int get_surface_height(int x);
-        void generate();
-        void draw(float cam_x, float cam_y);;
+    // Rendering
+    void draw(float cam_x, float cam_y);
 
-        void placement_pass();
+    // Terrain Queries
+    int get_surface_height(int x);
+    int get_layer_at(int x, int y);
+    int get_layer_index_at(int x, int y);
 
-        int get_layer_at(int x, int y);
-        
-        WallType get_wall_type_for_biome(BiomeType type, int layer_index);
-        BiomeType get_nearest_neighbour(int x, int& out_dist);
+    Block get_block_at(int x, int y, BiomeType b_type, const std::vector<int>& layer_limit);
+    std::vector<BlockOption>* get_options_for_layer(Biome& biome, int layer_index);
 
-        void generate_voronoi_layer(int layer_index, const std::vector<BlockOption>& options);
-
-        void generate_base_terrain();
-        void generate_secondary_fill();
-        int get_layer_index_at(int x, int y);
-        
-        std::vector<BlockOption>* get_options_for_layer(Biome& biome, int layer_index);
-        std::vector<std::vector<int>> layer_limits;
+    // Get Types
+    WallType get_wall_type_for_biome(BiomeType type, int layer_index);
+    BiomeType get_nearest_neighbour(int x, int& out_dist);
+    bool is_solid(int x, int y);
+    
+    // Gameplay
+    point_2d get_random_spawn_point();
 };

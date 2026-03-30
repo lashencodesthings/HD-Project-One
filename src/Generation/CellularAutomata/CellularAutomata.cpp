@@ -16,7 +16,7 @@ bool CellularAutomata::add_air_hole() {
 
 void CellularAutomata::seed_noise() {
     for (int x = 0; x < world.width; ++x) {
-        int surface_height = world.surface_map[x] + 2;
+        int surface_height = world.surface_map[x] + 10;
         for (int y = surface_height; y < world.height; ++y) {
             if (add_air_hole()) {
                 Block &old = world.blocks[x][y];
@@ -56,7 +56,7 @@ void CellularAutomata::apply() {
     }
 
     for (int x = 0; x < width; ++x) {
-        for (int y = world.surface_map[x] + 2; y < height; ++y) {
+        for (int y = world.surface_map[x] + 4; y < height; ++y) {
             int block_index = x + y * width;
             
             if (current[block_index]) {

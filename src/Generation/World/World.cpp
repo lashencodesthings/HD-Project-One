@@ -3,7 +3,7 @@
 #include "../BiomeSystem/BiomeSystem.h"
 #include "../PerlinNoise/PerlinNoise.h"
 #include "../TerrainSnakeGenerator/TerrainSnakeGenerator.h"
-#include <iostream>
+#include "splashkit.h"
 
 /*
     Author: Lashen Dharmadasa
@@ -161,10 +161,35 @@ int World::get_surface_height(int x) {
 
 std::vector<BlockOption>* World::get_options_for_layer(Biome& biome, int layer_index) {
     switch (layer_index) {
-        case 0:  return &biome.surface;
-        case 1:  return &biome.subsurface;
-        case 2:  return &biome.underground;
-        case 3:  return &biome.cavern;
+        case 0: return &biome.surface;
+        case 1: return &biome.subsurface;
+        case 2: return &biome.underground;
+        case 3: return &biome.cavern;
         default: return &biome.underworld;
     }
+}
+
+// Player Connection
+point_2d World::get_random_spawn_point() {
+    const int max_attempts = 1000;
+
+    for (int i = 0; i < max_attempts; i++) {
+        int x = rand() % width;
+        int y = surface_map[x];
+
+        if (y > 0 && y < height - 1 && blocks[x][y].type != Air && blocks[x][y - 1].type == Air) {
+            return { (double) x * BLOCK_SIZE * zoom, (double) (y - 1) * BLOCK_SIZE * zoom };
+        }
+    }
+
+    int x = width / 2;
+    int y = surface_map[x];
+    return { (double) x * BLOCK_SIZE * zoom, (double) (y - 1) * BLOCK_SIZE * zoom };
+}
+
+bool World::is_solid(int x, int y) {
+    if (x < 0 || x >= width || y < 0 || y >= height)
+        return false;
+
+    return blocks[x][y].type != Air;
 }

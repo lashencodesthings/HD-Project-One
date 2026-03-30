@@ -3,8 +3,8 @@
 
 struct Camera
 {
-    float x, y;  // Camera position
-    float smooth_factor = 0.1f; // How fast the camera follows the player
+    double x, y;
+    double smooth_factor = 0.1f;
 };
 
-void update_camera(Camera &cam, float target_x, float target_y);
+void update_camera(Camera &cam, double target_x, double target_y);
