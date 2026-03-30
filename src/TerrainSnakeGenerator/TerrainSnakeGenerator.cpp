@@ -2,6 +2,20 @@
 #include "../World/World.h"
 
 namespace TerrainSnakeGenerator {
+    
+    const int VEIN_SPACING = 10;
+    const int VEINS_PER_CLUSTER = 10;
+    const int VEIN_COUNT_VARIATION = 5;
+    const int MIN_VEIN_LENGTH = 100;
+    const int VEIN_LENGTH_VARIATION = 300;
+    const int MIN_BRUSH_RADIUS = 1;
+    const int BRUSH_RADIUS_VARIATION = 2;
+    const int MOVE_RANGE = 5;
+    const int MOVE_OFFSET = 2;
+    const float STEP_SCALE = 1.1f;
+    const int SURFACE_OFFSET = 0;
+    const int BRANCH_PROBABILITY = 2;
+    const int MAX_BRANCHES = 4;
 
     static std::vector<BlockOption> build_secondary_block_palette(const std::vector<BlockOption>& layer_options);
     static BlockType select_weighted_block(const std::vector<BlockOption>& palette);
@@ -19,21 +33,6 @@ namespace TerrainSnakeGenerator {
     );
 
     void generate(World& world) {
-
-        const int VEIN_SPACING = 10;
-        const int VEINS_PER_CLUSTER = 10;
-        const int VEIN_COUNT_VARIATION = 5;
-        const int MIN_VEIN_LENGTH = 100;
-        const int VEIN_LENGTH_VARIATION = 300;
-        const int MIN_BRUSH_RADIUS = 1;
-        const int BRUSH_RADIUS_VARIATION = 2;
-        const int MOVE_RANGE = 5;
-        const int MOVE_OFFSET = 2;
-        const float STEP_SCALE = 1.1f;
-        const int SURFACE_OFFSET = 0;
-        const int BRANCH_PROBABILITY = 2;
-        const int MAX_BRANCHES = 4;
-
         for (int spawn_x = 0; spawn_x < world.width; spawn_x += VEIN_SPACING) {
 
             int active_vein_count = VEINS_PER_CLUSTER + (rand() % VEIN_COUNT_VARIATION);
@@ -148,23 +147,7 @@ namespace TerrainSnakeGenerator {
         }
     }
 
-    static void simulate_vein(
-        World& world,
-        float pos_x,
-        float pos_y,
-        int lifespan,
-        int radius,
-        const std::vector<BlockOption>& palette,
-        BiomeType origin_biome,
-        int& active_vein_count,
-        int& branch_count
-    ) {
-        const int MOVE_RANGE = 5;
-        const int MOVE_OFFSET = 2;
-        const float STEP_SCALE = 1.1f;
-        const int BRANCH_PROBABILITY = 2;
-        const int MAX_BRANCHES = 4;
-
+    static void simulate_vein(World& world, float pos_x, float pos_y, int lifespan, int radius, const std::vector<BlockOption>& palette, BiomeType origin_biome, int& active_vein_count, int& branch_count) {
         for (int step = 0; step < lifespan; step++) {
 
             pos_x += (float)((rand() % MOVE_RANGE) - MOVE_OFFSET) * STEP_SCALE;
