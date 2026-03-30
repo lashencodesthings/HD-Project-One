@@ -20,7 +20,7 @@ class CellularAutomata {
         std::mt19937 rng;
 
         const int WALL_THRESHOLD = 4;
-        const int NOISE_DENSITY = 36;
+        const int NOISE_DENSITY = 35;
         const int ITERATIONS = 12;
 
         std::uniform_int_distribution<int> percent_dist{0, 99};

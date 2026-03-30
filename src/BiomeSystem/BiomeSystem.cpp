@@ -11,25 +11,25 @@ std::map<BiomeType, Biome>& get_biome_data()
         {BiomeType::Plains, {
             // Surface
             { 
-                {Grass, 0.85f}, 
-                {Dirt,  0.15f} 
+                {Grass, 1.0f}
             },
 
             // Subsurface 
             {
-                {Dirt,  1.0f},
+                {Dirt,  0.80f},
+                {Stone, 0.20f}
             },
 
             // Underground
             {
-                {Dirt,  0.30f},
-                {Stone, 0.70f}
+                {Dirt,  0.20f},
+                {Stone, 0.80f}
             },
 
             // Cavern
             {
-                {Stone, 0.25f},
-                {Cavernstone, 0.75f}
+                {Stone, 0.15f},
+                {Cavernstone, 0.85f}
             },
 
             // Underworld
