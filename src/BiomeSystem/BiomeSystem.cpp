@@ -1,12 +1,16 @@
 #include "splashkit.h"
 #include "BiomeSystem.h"
 
-std::map<BiomeType, Biome> biome_data = {
-    {BiomeType::Plains, {Grass, Dirt, Stone, Cavernstone, Hellstone, UndergroundWall, CavernWall, HellWall}},
-    {BiomeType::Desert, {Sand, Sand, Sandstone, Cavernstone, Hellstone, SandWall, CavernWall, HellWall}},
-    {BiomeType::Snow, {Snow, Snow, Ice, Cavernstone, Hellstone, SnowWall, CavernWall, HellWall}},
-    {BiomeType::Jungle, {JungleGrass, JungleDirt, JungleStone, Cavernstone, Hellstone, JungleWall, CavernWall, HellWall}}
-};
+std::map<BiomeType, Biome>& get_biome_data()
+{
+    static std::map<BiomeType, Biome> biome_data = {
+        {BiomeType::Plains, {Grass, Dirt, Stone, Cavernstone, Hellstone, UndergroundWall, CavernWall, HellWall}},
+        {BiomeType::Desert, {Sand, Sand, Sandstone, Cavernstone, Hellstone, SandWall, CavernWall, HellWall}},
+        {BiomeType::Snow, {Snow, Snow, Ice, Cavernstone, Hellstone, SnowWall, CavernWall, HellWall}},
+        {BiomeType::Jungle, {JungleGrass, JungleDirt, JungleStone, Cavernstone, Hellstone, JungleWall, CavernWall, HellWall}}
+    };
+    return biome_data;
+}
 
 std::vector<BiomeType> sequence = {
     BiomeType::Plains,
@@ -44,4 +48,4 @@ std::vector<BiomeType> generate_biome_map(int width, unsigned int seed)
     }
 
     return map;
-}
+} 

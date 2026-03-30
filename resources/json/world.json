@@ -2,8 +2,8 @@
   "terrain": {
     "amplitude_ratio": 0.25,
     "base_height_ratio": 0.2,
-    "big_scale": 0.01,
-    "small_scale": 0.1,
+    "big_scale": 0.1,
+    "small_scale": 0.3,
     "small_weight": 0.3
   },
   "noise": {

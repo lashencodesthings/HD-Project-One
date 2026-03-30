@@ -4,10 +4,10 @@
 #include "../Block/Block.h"
 
 enum class BiomeType {
-    Plains,
-    Desert,
-    Snow,
-    Jungle
+    Plains = 0,
+    Desert = 1,
+    Snow = 2,
+    Jungle = 3
 };
 
 struct Biome {
@@ -22,5 +22,5 @@ struct Biome {
     WallType underworld_wall;
 };
 
-extern std::map<BiomeType, Biome> biome_data;
+extern std::map<BiomeType, Biome>& get_biome_data();
 extern std::vector<BiomeType> generate_biome_map(int width, unsigned int seed);
