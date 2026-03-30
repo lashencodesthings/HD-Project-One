@@ -60,4 +60,5 @@ public:
     
     // Gameplay
     point_2d get_random_spawn_point();
+    void remove_block(int x, int y);
 };

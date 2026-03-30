@@ -1,8 +1,8 @@
 #include "splashkit.h"
 #include "Generation/World/World.h"
 #include "Generation/CellularAutomata/CellularAutomata.h"
-#include "Entities/Player/player.h"
-#include "Entities/Camera/camera.h"
+#include "Entities/Player/Player.h"
+#include "Entities/Camera/Camera.h"
 
 const int WORLD_WIDTH = 6400;
 const int WORLD_HEIGHT = 1800;
@@ -41,7 +41,7 @@ int main()
     {
         process_events();
 
-        update_player(player, world);
+        update_player(player, world, cam);
         update_camera(cam, player.x, player.y);
 
         clear_screen(COLOR_LIGHT_SKY_BLUE);

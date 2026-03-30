@@ -187,6 +187,12 @@ point_2d World::get_random_spawn_point() {
     return { (double) x * BLOCK_SIZE * zoom, (double) (y - 1) * BLOCK_SIZE * zoom };
 }
 
+void World::remove_block(int x, int y) {
+    if (x >= 0 && x < width && y >= 0 && y < height) {
+        blocks[x][y].type = Air;
+    }
+}
+
 bool World::is_solid(int x, int y) {
     if (x < 0 || x >= width || y < 0 || y >= height)
         return false;

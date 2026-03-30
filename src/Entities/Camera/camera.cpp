@@ -1,4 +1,4 @@
-#include "camera.h"
+#include "Camera.h"
 #include "splashkit.h"
 
 void update_camera(Camera &cam, double target_x, double target_y)
