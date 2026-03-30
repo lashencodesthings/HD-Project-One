@@ -86,27 +86,35 @@ void World::generate() {
 
 void World::draw(float cam_x, float cam_y)
 {
-    for (int x = 0; x < width; x++)
+    int tile_size = BLOCK_SIZE * zoom;
+
+    int start_x = cam_x / tile_size;
+    int end_x   = (cam_x + screen_width()) / tile_size + 1;
+
+    int start_y = cam_y / tile_size;
+    int end_y   = (cam_y + screen_height()) / tile_size + 1;
+
+    if (start_x < 0) start_x = 0;
+    if (start_y < 0) start_y = 0;
+    if (end_x > width) end_x = width;
+    if (end_y > height) end_y = height;
+
+    for (int x = start_x; x < end_x; x++)
     {
-        for (int y = 0; y < height; y++)
+        for (int y = start_y; y < end_y; y++)
         {
             const Block& block = blocks[x][y];
 
-            int bx = x * BLOCK_SIZE * zoom - cam_x;
-            int by = y * BLOCK_SIZE * zoom - cam_y;
-            int size = BLOCK_SIZE * zoom;
+            int bx = x * tile_size - cam_x;
+            int by = y * tile_size - cam_y;
 
             if (block.type != Air)
             {
-                fill_rectangle(block_colors[block.type], bx, by, size, size);
+                fill_rectangle(block_colors[block.type], bx, by, tile_size, tile_size);
             }
             else if (block.wall != AirWall)
             {
-                fill_rectangle(wall_colors[block.wall], bx, by, size, size);
-            }
-            else
-            {
-                fill_rectangle(block_colors[Air], bx, by, size, size);
+                fill_rectangle(wall_colors[block.wall], bx, by, tile_size, tile_size);
             }
         }
     }

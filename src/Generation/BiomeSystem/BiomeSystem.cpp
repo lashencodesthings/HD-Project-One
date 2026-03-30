@@ -50,8 +50,8 @@ std::map<BiomeType, Biome>& get_biome_data()
 
             // Subsurface
             {
-                {Sand, 0.7f},
-                {Sandstone, 0.25f},
+                {Sand, 0.95f},
+                {Sandstone, 0.05f},
             },
 
             // Underground
@@ -61,8 +61,8 @@ std::map<BiomeType, Biome>& get_biome_data()
 
             // Cavern
             {
-                {Stone, 0.3f},
-                {Cavernstone, 0.7f}
+                {Stone, 0.1f},
+                {Cavernstone, 0.9f}
             },
 
             // Underworld
@@ -95,9 +95,9 @@ std::map<BiomeType, Biome>& get_biome_data()
 
             // Cavern
             {
-                {Ice, 0.1f},
-                {Stone, 0.1f},
-                {Cavernstone, 0.8f}
+                {Ice, 0.05f},
+                {Stone, 0.05f},
+                {Cavernstone, 0.9f}
             },
 
             // Underworld
@@ -131,9 +131,9 @@ std::map<BiomeType, Biome>& get_biome_data()
 
             // Cavern
             {
-                {JungleDirt,  0.1f},
-                {JungleStone, 0.2f},
-                {Cavernstone, 0.7f}
+                {JungleDirt,  0.05f},
+                {JungleStone, 0.05f},
+                {Cavernstone, 0.9f}
             },
 
             // Underworld
@@ -157,12 +157,18 @@ struct BiomeSegment
 };
 
 std::vector<BiomeSegment> sequence = {
-    {BiomeType::Plains, 240},
-    {BiomeType::Desert, 100},
-    {BiomeType::Plains, 240},
-    {BiomeType::Snow, 50},
-    {BiomeType::Plains, 240},
-    {BiomeType::Jungle, 180}
+    {BiomeType::Plains, 700},
+    {BiomeType::Desert, 500},
+    {BiomeType::Plains, 600},
+    {BiomeType::Desert, 300},
+    {BiomeType::Plains, 500},
+    {BiomeType::Jungle, 1000},
+    {BiomeType::Plains, 600},
+    {BiomeType::Snow, 900},
+    {BiomeType::Plains, 500},
+    {BiomeType::Jungle, 200},
+    {BiomeType::Desert, 300},
+    {BiomeType::Plains, 300}
 };
 
 std::vector<BiomeType> generate_biome_map(int width, unsigned int seed)

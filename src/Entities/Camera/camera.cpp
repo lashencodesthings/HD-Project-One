@@ -3,6 +3,9 @@
 
 void update_camera(Camera &cam, float target_x, float target_y)
 {
-    cam.x = target_x - screen_width() / 2;
-    cam.y = target_y - screen_height() / 2;
+    float desired_x = target_x - screen_width() / 2;
+    float desired_y = target_y - screen_height() / 2;
+
+    cam.x += (desired_x - cam.x) * cam.smooth_factor;
+    cam.y += (desired_y - cam.y) * cam.smooth_factor;
 }

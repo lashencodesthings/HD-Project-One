@@ -2,8 +2,8 @@
   "terrain": {
     "amplitude_ratio": 0.25,
     "base_height_ratio": 0.2,
-    "big_scale": 0.1,
-    "small_scale": 0.3,
+    "big_scale": 0.02,
+    "small_scale": 0.015,
     "small_weight": 0.3
   },
   "noise": {
@@ -12,9 +12,9 @@
   },
   "layers": [
     { "thickness": 1, "variation": 0, "noise_scale": 0.05 },
-    { "thickness": 50, "variation": 1, "noise_scale": 0.05 },
-    { "thickness": 80, "variation": 2, "noise_scale": 0.05 },
-    { "thickness": 120, "variation": 3, "noise_scale": 0.05 },
-    { "thickness": 10, "variation": 3, "noise_scale": 0.05 }
+    { "thickness": 249, "variation": 1, "noise_scale": 0.05 },
+    { "thickness": 350, "variation": 2, "noise_scale": 0.05 },
+    { "thickness": 800, "variation": 3, "noise_scale": 0.05 },
+    { "thickness": 400, "variation": 3, "noise_scale": 0.05 }
   ]
 }

@@ -4,11 +4,14 @@
 #include "Entities/Player/player.h"
 #include "Entities/Camera/camera.h"
 
+const int WORLD_WIDTH = 6400;
+const int WORLD_HEIGHT = 1800;
+
 World generate_world()
 {
     WorldConfig cfg = load_world_config("world.json");
 
-    World world(960, 540, 12345, 1, cfg);
+    World world(WORLD_WIDTH, WORLD_HEIGHT, 9878685, 1, cfg);
     world.generate();
 
     CellularAutomata ca(world);
@@ -19,7 +22,7 @@ World generate_world()
 
 int main()
 {
-    Player player = {100, 100, 0, 0};
+    Player player = {0, 0, 0, 0};
     Camera cam = {0, 0};
 
     open_window("Game", 1920, 1080);

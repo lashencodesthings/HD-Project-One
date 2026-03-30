@@ -14,6 +14,7 @@ class World
         int width, height;
         unsigned int seed;
         int zoom;
+        const int BLOCK_SIZE = 16;
 
         std::vector<std::vector<Block>> blocks;
 
@@ -27,8 +28,6 @@ class World
         std::vector<BiomeType> biome_map;
 
         Block get_block_at(int x, int y, BiomeType b_type, const std::vector<int>& layer_limit);
-
-        const int BLOCK_SIZE = 2;
 
         std::vector<int> surface_map;
 
