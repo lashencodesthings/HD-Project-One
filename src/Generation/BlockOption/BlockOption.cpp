@@ -3,7 +3,10 @@
 
 BlockType pick_weighted(const std::vector<BlockOption>& options, float r)
 {
-    if (options.empty()) return Air;
+    if (options.empty()) 
+    {
+        return Air;
+    }
 
     float total_weight = 0.0f;
     for (size_t i = 0; i < options.size(); ++i) {

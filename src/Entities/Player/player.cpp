@@ -5,19 +5,29 @@
 #include <cmath>
 
 const double GRAVITY = 0.4f;
-const double MOVE_SPEED = 1.0f;
-const double JUMP_FORCE = -10.0f;
+const double MOVE_SPEED = 2.0f;
+const double JUMP_FORCE = -12.0f;
 const double MAX_FALL_SPEED = 12.0f;
 
-const int PLAYER_SIZE = 16;
+const int PLAYER_WIDTH = 16;
+const int PLAYER_HEIGHT = 32;
 
 void update_player(Player &player, World &world, Camera &camera)
 {
     player.vy += GRAVITY;
-    if (player.vy > MAX_FALL_SPEED) player.vy = MAX_FALL_SPEED;
+    if (player.vy > MAX_FALL_SPEED)
+    {
+        player.vy = MAX_FALL_SPEED;
+    }
     
-    if (key_down(A_KEY) || key_down(LEFT_KEY)) player.vx += -MOVE_SPEED;
-    if (key_down(D_KEY) || key_down(RIGHT_KEY)) player.vx += MOVE_SPEED;
+    if (key_down(A_KEY) || key_down(LEFT_KEY))
+    {
+        player.vx += -MOVE_SPEED;
+    }
+    if (key_down(D_KEY) || key_down(RIGHT_KEY))
+    {
+        player.vx += MOVE_SPEED;
+    }
 
     if ((key_typed(W_KEY) || key_typed(UP_KEY) || key_typed(SPACE_KEY)) && is_on_ground(player, world))
     {
@@ -36,7 +46,7 @@ void draw_player(const Player &player, double cam_x, double cam_y)
     double screen_x = player.x - cam_x;
     double screen_y = player.y - cam_y;
 
-    fill_rectangle(COLOR_RED, screen_x, screen_y, PLAYER_SIZE, PLAYER_SIZE);
+    fill_rectangle(COLOR_RED, screen_x, screen_y, PLAYER_WIDTH, PLAYER_HEIGHT);
 }
 
 bool is_colliding(World& world, double x, double y, double w, double h)
@@ -59,7 +69,6 @@ bool is_colliding(World& world, double x, double y, double w, double h)
     return false;
 }
 
-// I encountered an issue where the player couldn't go up 1 block, so I've made this function step them up 1 block smoothly if possible
 void horizontal_collision(Player &player, World &world)
 {
     if (player.vx == 0) return;

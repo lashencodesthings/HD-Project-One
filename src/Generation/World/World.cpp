@@ -139,7 +139,9 @@ WallType World::get_wall_type_for_biome(BiomeType type, int layer_index) {
 }
 
 Block World::get_block_at(int x, int y, BiomeType biome_type, const std::vector<int>& layer_limit) {
-    if (x < 0 || x >= width || y < 0 || y >= height) return Block(Air);
+    if (x < 0 || x >= width || y < 0 || y >= height){
+        return Block(Air);
+    }
     int layer_idx = get_layer_index_at(x, y); 
     Biome& biome = get_biome_data().at(biome_type);
     const std::vector<BlockOption>* options = get_options_for_layer(biome, layer_idx);
@@ -177,14 +179,14 @@ point_2d World::get_random_spawn_point() {
         int x = rand() % width;
         int y = surface_map[x];
 
-        if (y > 0 && y < height - 1 && blocks[x][y].type != Air && blocks[x][y - 1].type == Air) {
-            return { (double) x * BLOCK_SIZE * zoom, (double) (y - 1) * BLOCK_SIZE * zoom };
+        if (y > 0 && y < height - 1 && blocks[x][y].type != Air && blocks[x][y - 2].type == Air) {
+            return { (double) x * BLOCK_SIZE * zoom, (double) (y - 2) * BLOCK_SIZE * zoom };
         }
     }
 
     int x = width / 2;
     int y = surface_map[x];
-    return { (double) x * BLOCK_SIZE * zoom, (double) (y - 1) * BLOCK_SIZE * zoom };
+    return { (double) x * BLOCK_SIZE * zoom, (double) (y - 2) * BLOCK_SIZE * zoom };
 }
 
 void World::remove_block(int x, int y) {
