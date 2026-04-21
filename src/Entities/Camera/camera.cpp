@@ -1,11 +1,12 @@
-#include "Camera.h"
 #include "splashkit.h"
+#include "../../Entities/Player/player.h"
+#include "camera.h"
 
-void update_camera(Camera &cam, double target_x, double target_y)
+void update_camera(Camera &camera, const Player player)
 {
-    double desired_x = target_x - screen_width() / 2;
-    double desired_y = target_y - screen_height() / 2;
+    double desired_x = player.x - screen_width() / 2;
+    double desired_y = player.y - screen_height() / 2;
 
-    cam.x += (desired_x - cam.x) * cam.smooth_factor;
-    cam.y += (desired_y - cam.y) * cam.smooth_factor;
+    camera.x += (desired_x - camera.x) * camera.smooth_factor;
+    camera.y += (desired_y - camera.y) * camera.smooth_factor;
 }

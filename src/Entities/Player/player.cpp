@@ -5,16 +5,23 @@
 const double GRAVITY = 0.4, MOVE_SPEED = 2.0, JUMP_FORCE = -12.0, MAX_FALL_SPEED = 12.0, FRICTION = 0.8;
 
 void handle_mining(Player &player, World &world) {
-    if (!mouse_down(LEFT_BUTTON)) { return; }
+    if (mouse_down(LEFT_BUTTON))
+    {
+        double current_mouse_x = mouse_x();
+        double current_mouse_y = mouse_y();
 
-    point_2d mouse_world = { mouse_x() + player.camera.x, mouse_y() + player.camera.y };
-    point_2d player_center = { player.x + (player.w / 2), player.y + (player.h / 2) };
+        double world_mouse_x = current_mouse_x + player.camera.x;
+        double world_mouse_y = current_mouse_y + player.camera.y;
 
-    int scaled_size = world.BLOCK_SIZE * world.zoom;
-    world.remove_block((int) (mouse_world.x / scaled_size), (int) (mouse_world.y / scaled_size));
-    
-    // if (point_point_distance(player_center, mouse_world) < scaled_size * 5) {
-    // }
+        int block_size = world.BLOCK_SIZE * world.zoom;
+        int block_x = (int)(world_mouse_x / block_size);
+        int block_y = (int)(world_mouse_y / block_size);
+
+        double dist = sqrt(pow(player.x - world_mouse_x, 2) + pow(player.y - world_mouse_y, 2));
+        if (dist < world.BLOCK_SIZE * 5) { 
+            world.remove_block(block_x, block_y);
+        }
+    }
 }
 
 void update_player(Player &player, World &world) {

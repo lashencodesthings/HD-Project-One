@@ -3,6 +3,7 @@
 #include "Generation/CellularAutomata/CellularAutomata.h"
 #include "Entities/Player/Player.h"
 #include "Entities/Camera/Camera.h"
+#include "Entities/Entity/Entity.h"
 #include <memory>
 
 // const int WORLD_WIDTH = 6400;
@@ -38,8 +39,8 @@ int main()
     {
         process_events();
 
-        update_player(player, *world); 
-        update_camera(cam, player.x, player.y);
+        update_player(player, *world);
+        update_camera(cam, player);
 
         clear_screen(COLOR_LIGHT_SKY_BLUE);
 
