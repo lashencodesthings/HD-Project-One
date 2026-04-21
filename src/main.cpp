@@ -5,7 +5,9 @@
 #include "Entities/Camera/Camera.h"
 #include <memory>
 
-const int WORLD_WIDTH = 6400;
+// const int WORLD_WIDTH = 6400;
+// const int WORLD_HEIGHT = 1800;
+const int WORLD_WIDTH = 50;
 const int WORLD_HEIGHT = 1800;
 
 std::unique_ptr<World> generate_world()
@@ -28,27 +30,21 @@ int main()
     std::unique_ptr<World> world = generate_world();
 
     point_2d spawn = world -> get_random_spawn_point();
-
-    Player player = {
-        spawn.x,
-        spawn.y - 10,
-        0, 0,
-        16, 32
-    };
-
-    Camera cam = {player.x, player.y};
+    
+    Camera cam;
+    Player player = { spawn.x, spawn.y - 1, 16, 32, 0.0, 0.0, cam };
 
     while (!quit_requested())
     {
         process_events();
 
-        update_player(player, *world, cam); 
+        update_player(player, *world); 
         update_camera(cam, player.x, player.y);
 
         clear_screen(COLOR_LIGHT_SKY_BLUE);
 
         world -> draw(cam.x, cam.y);
-        draw_player(player, cam.x, cam.y);
+        draw_entity(player, cam);
 
         refresh_screen(60);
 
@@ -57,9 +53,11 @@ int main()
             world = generate_world();
             point_2d spawn = world -> get_random_spawn_point();
             player.x = spawn.x;
-            player.y = spawn.y - 10;
+            player.y = spawn.y - 1;
         }
     }
 
     return 0;
 }
+
+// Run clang++ -std=c++20 (Get-ChildItem -Recurse -Filter *.cpp | ForEach-Object { $_.FullName }) -I src -l splashkit -o test -Wall

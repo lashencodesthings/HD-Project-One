@@ -1,150 +1,53 @@
 #include "splashkit.h"
 #include "Player.h"
-#include "../../Entities/Camera/Camera.h"
-#include "../../Generation/World/World.h"
 #include <cmath>
 
-const double GRAVITY = 0.4f;
-const double MOVE_SPEED = 2.0f;
-const double JUMP_FORCE = -12.0f;
-const double MAX_FALL_SPEED = 12.0f;
+const double GRAVITY = 0.4, MOVE_SPEED = 2.0, JUMP_FORCE = -12.0, MAX_FALL_SPEED = 12.0, FRICTION = 0.8;
 
-const int PLAYER_WIDTH = 16;
-const int PLAYER_HEIGHT = 32;
+void handle_mining(Player &player, World &world) {
+    if (!mouse_down(LEFT_BUTTON)) { return; }
 
-void update_player(Player &player, World &world, Camera &camera)
-{
-    player.vy += GRAVITY;
-    if (player.vy > MAX_FALL_SPEED)
-    {
-        player.vy = MAX_FALL_SPEED;
-    }
+    point_2d mouse_world = { mouse_x() + player.camera.x, mouse_y() + player.camera.y };
+    point_2d player_center = { player.x + (player.w / 2), player.y + (player.h / 2) };
+
+    int scaled_size = world.BLOCK_SIZE * world.zoom;
+    world.remove_block((int) (mouse_world.x / scaled_size), (int) (mouse_world.y / scaled_size));
     
-    if (key_down(A_KEY) || key_down(LEFT_KEY))
-    {
-        player.vx += -MOVE_SPEED;
-    }
-    if (key_down(D_KEY) || key_down(RIGHT_KEY))
-    {
-        player.vx += MOVE_SPEED;
-    }
-
-    if ((key_typed(W_KEY) || key_typed(UP_KEY) || key_typed(SPACE_KEY)) && is_on_ground(player, world))
-    {
-        player.vy = JUMP_FORCE;
-    }
-
-    horizontal_collision(player, world);
-    vertical_collision(player, world);
-
-    handle_mining(player, world, camera.x, camera.y);
-    player.vx *= 0.8f;
+    // if (point_point_distance(player_center, mouse_world) < scaled_size * 5) {
+    // }
 }
 
-void draw_player(const Player &player, double cam_x, double cam_y)
-{
-    double screen_x = player.x - cam_x;
-    double screen_y = player.y - cam_y;
+void update_player(Player &player, World &world) {
+    player.vy = std::min(player.vy + GRAVITY, MAX_FALL_SPEED);
 
-    fill_rectangle(COLOR_RED, screen_x, screen_y, PLAYER_WIDTH, PLAYER_HEIGHT);
-}
+    if (key_down(D_KEY) || key_down(RIGHT_KEY)) player.vx += MOVE_SPEED;
+    if (key_down(A_KEY) || key_down(LEFT_KEY))  player.vx -= MOVE_SPEED;
+    if ((key_typed(W_KEY) || key_typed(UP_KEY) || key_typed(SPACE_KEY)) && is_on_ground(world, player)) player.vy = JUMP_FORCE;
 
-bool is_colliding(World& world, double x, double y, double w, double h)
-{
-    int block_size = world.BLOCK_SIZE * world.zoom;
-
-    int left = (int)(x) / block_size;
-    int right = (int)(x + w - 1) / block_size;
-    int top = (int)(y) / block_size;
-    int bottom = (int)(y + h - 1) / block_size;
-
-    for (int check_x = left; check_x <= right; check_x++) {
-        for (int check_y = top; check_y <= bottom; check_y++) {
-            if (world.is_solid(check_x, check_y)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-void horizontal_collision(Player &player, World &world)
-{
-    if (player.vx == 0) return;
-
-    int block_size = world.BLOCK_SIZE * world.zoom; 
-    int steps = abs((int) player.vx);
-    int dir = (player.vx > 0) ? 1 : -1;
-    bool grounded = is_on_ground(player, world);
-
-    for (int i = 0; i < steps; i++)
-    {
-        player.x += dir;
-
-        if (is_colliding(world, player.x, player.y, player.w, player.h))
-        {
-            bool stepped_up = false;
-            if (grounded && !is_colliding(world, player.x, player.y - block_size, player.w, player.h))
-            {
-                for (int j = 0; j < block_size; j++) {
-                    player.y--;
-                    if (!is_colliding(world, player.x, player.y, player.w, player.h)) {
-                        stepped_up = true;
-                        break; 
+    // Lambda function for processing movement, capture by reference so changes can be made to player data
+    auto process_move = [&](double &pos, double &vel, bool horizontal) {
+        int dir = (vel > 0) ? 1 : -1;
+        for (int i = 0; i < std::abs((int) vel); i++) {
+            pos += dir;
+            if (is_colliding_with_world(world, player)) {
+                if (horizontal && is_on_ground(world, player)) {
+                    bool stepped = false;
+                    for (int j = 0; j < world.BLOCK_SIZE * world.zoom; j++) {
+                        player.y --;
+                        if (!is_colliding_with_world(world, player)) { stepped = true; break; }
                     }
+                    if (stepped) continue; else player.y += (player.y - pos);
                 }
-            }
-
-            if (!stepped_up)
-            {
-                player.x -= dir;
-                player.vx = 0; 
-                break; 
+                pos -= dir; 
+                vel = 0; 
+                break;
             }
         }
-    }
-}
+    };
 
-void vertical_collision(Player &player, World &world)
-{
-    int dir = (player.vy > 0) ? 1 : -1;
-    int steps = std::abs((int) player.vy);
+    process_move(player.x, player.vx, true);
+    process_move(player.y, player.vy, false);
 
-    for (int i = 0; i < steps; i++)
-    {
-        player.y += dir;
-        if (is_colliding(world, player.x, player.y, player.w, player.h))
-        {
-            player.y -= dir;
-            player.vy = 0;
-            break;
-        }
-    }
-}
-
-bool is_on_ground(Player &player, World &world)
-{
-    return is_colliding(world, player.x, player.y + 1, player.w, player.h);
-}
-
-void handle_mining(Player &player, World &world, double cam_x, double cam_y)
-{
-    if (mouse_down(LEFT_BUTTON))
-    {
-        double current_mouse_x = mouse_x();
-        double current_mouse_y = mouse_y();
-
-        double world_mouse_x = current_mouse_x + cam_x;
-        double world_mouse_y = current_mouse_y + cam_y;
-
-        int block_size = world.BLOCK_SIZE * world.zoom;
-        int block_x = (int)(world_mouse_x / block_size);
-        int block_y = (int)(world_mouse_y / block_size);
-
-        double dist = sqrt(pow(player.x - world_mouse_x, 2) + pow(player.y - world_mouse_y, 2));
-        if (dist < world.BLOCK_SIZE * 5) { 
-            world.remove_block(block_x, block_y);
-        }
-    }
+    handle_mining(player, world);
+    player.vx *= FRICTION;
 }

@@ -191,7 +191,7 @@ point_2d World::get_random_spawn_point() {
 
 void World::remove_block(int x, int y) {
     if (x >= 0 && x < width && y >= 0 && y < height) {
-        blocks[x][y].type = Air;
+        blocks[x][y].type = Stone;
     }
 }
 
