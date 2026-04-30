@@ -1,7 +1,13 @@
 #pragma once
-// Forward declaration to tell the compiler the Player is a struct that exists
+#ifndef CAMERA_H
+#define CAMERA_H
 
-struct Player; 
-struct Camera;
+struct Camera
+{
+    double x, y;
+    double smooth_factor = 0.1f;
+};
 
-void update_camera(Camera &camera, Player &player);
+void update_camera(Camera &camera, double x, double y);
+
+#endif

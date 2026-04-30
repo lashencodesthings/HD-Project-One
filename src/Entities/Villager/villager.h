@@ -1,5 +1,5 @@
 #pragma once
-#include "../../Entities/Camera/Camera.h"
+#include "../../Entities/Camera/camera.h"
 #include "../../Generation/World/World.h"
 #include "../../Entities/Entity/entity.h"
 

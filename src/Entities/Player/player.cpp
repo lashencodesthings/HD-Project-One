@@ -1,5 +1,5 @@
 #include "splashkit.h"
-#include "Player.h"
+#include "player.h"
 #include <cmath>
 
 const double GRAVITY = 0.4, MOVE_SPEED = 2.0, JUMP_FORCE = -12.0, MAX_FALL_SPEED = 12.0, FRICTION = 0.8;
@@ -17,10 +17,11 @@ void handle_mining(Player &player, World &world) {
         int block_x = (int)(world_mouse_x / block_size);
         int block_y = (int)(world_mouse_y / block_size);
 
-        double dist = sqrt(pow(player.x - world_mouse_x, 2) + pow(player.y - world_mouse_y, 2));
-        if (dist < world.BLOCK_SIZE * 5) { 
-            world.remove_block(block_x, block_y);
-        }
+        world.remove_block(block_x, block_y);
+        // double dist = sqrt(pow(player.x - world_mouse_x, 2) + pow(player.y - world_mouse_y, 2));
+        // if (dist < world.BLOCK_SIZE * 5) { 
+        //     world.remove_block(block_x, block_y);
+        // }
     }
 }
 
@@ -43,7 +44,8 @@ void update_player(Player &player, World &world) {
                         player.y --;
                         if (!is_colliding_with_world(world, player)) { stepped = true; break; }
                     }
-                    if (stepped) continue; else player.y += (player.y - pos);
+                    if (stepped) { continue; }
+                    else { player.y += (player.y - pos); }
                 }
                 pos -= dir; 
                 vel = 0; 

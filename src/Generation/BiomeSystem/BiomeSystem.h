@@ -24,4 +24,5 @@ struct Biome {
 };
 
 extern std::map<BiomeType, Biome>& get_biome_data();
+extern BiomeType get_biome_at_x(int x);
 extern std::vector<BiomeType> generate_biome_map(int width, unsigned int seed);

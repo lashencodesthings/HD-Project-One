@@ -7,7 +7,6 @@
 std::map<BiomeType, Biome>& get_biome_data()
 {
     static std::map<BiomeType, Biome> biome_data = {
-
         {BiomeType::Plains, {
             // Surface
             { 
@@ -195,4 +194,23 @@ std::vector<BiomeType> generate_biome_map(int width, unsigned int seed)
     }
 
     return map;
+}
+
+BiomeType get_biome_at_x(int x) {
+    // Handle coordinates left of the map origin
+    if (x < 0){
+        return sequence.front().type;
+    }
+
+    int current_x = 0;
+    for (const BiomeSegment& segment : sequence) {
+        // If x falls within this segment's range, return the segment
+        if (x < current_x + segment.width) {
+            return segment.type;
+        }
+        current_x += segment.width;
+    }
+
+    // Default to the last biome type if x exceeds the total defined width
+    return sequence.back().type;
 }

@@ -1,7 +1,8 @@
 #pragma once
-#include "../../Generation/World/World.h"
-#include "../../Entities/Entity/entity.h"
-#include "../../Entities/Camera/camera.h"
+#ifndef ENTITY_H
+#define ENTITY_H
+
+struct Camera;
 
 struct Entity {
     double x, y, w, h;
@@ -13,3 +14,5 @@ struct Entity {
 bool is_colliding_with_world(World &world, Entity &entity);
 bool is_on_ground(World &world, Entity &entity);
 void draw_entity(const Entity &entity, const Camera &camera);
+
+#endif

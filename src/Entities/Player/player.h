@@ -1,4 +1,7 @@
 #pragma once
+#ifndef PLAYER_H
+#define PLAYER_H
+
 #include "../../Entities/Camera/camera.h"
 #include "../../Generation/World/World.h"
 #include "../../Entities/Entity/entity.h"
@@ -11,5 +14,7 @@ struct Player : Entity
     Player(double creationX, double creationY, double creationW, double creationH, double creationVx, double creationVy, Camera creationCamera) : Entity(creationX, creationY, creationW, creationH, creationVx, creationVy), camera(creationCamera){}
 };
 
-void update_player(Player& player, World& world);
+void update_player(Player& player, World &world);
 void handle_mining(Player &player, World &world);
+
+#endif
